@@ -1,0 +1,25 @@
+{
+  "name": "@schema-form/business-shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./components/*": "./components/*",
+    "./stores/*": "./stores/*",
+    "./stores/layout": "./stores/layout.ts",
+    "./composables/*": "./composables/*",
+    "./utils/*": "./utils/*",
+    "./utils/authTypes": "./utils/authTypes.ts"
+  },
+  "dependencies": {
+    "@schema-form/platform-shared": "workspace:*",
+    "vue": "^3.5.13",
+    "pinia": "^2.3.1",
+    "vue-router": "^4.5.0",
+    "element-plus": "^2.9.1"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.3"
+  }
+}
