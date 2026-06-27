@@ -1,8 +1,7 @@
+minimumReleaseAge: 0
 allowBuilds:
   esbuild: true
   vue-demi: true
-minimumReleaseAgeExclude:
-  - '@schema-platform/platform-shared@1.0.0'
 onlyBuiltDependencies:
   - esbuild
   - vue-demi
