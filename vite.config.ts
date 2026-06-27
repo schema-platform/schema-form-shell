@@ -8,6 +8,11 @@ const rootDir = fileURLToPath(new URL('.', import.meta.url))
 export default defineConfig({
   base: '/schema-platform/',
   plugins: [vue()],
+  css: {
+    preprocessorOptions: {
+      scss: { api: 'modern-compiler' },
+    },
+  },
   resolve: {
     alias: { '@': resolve(rootDir, 'src') },
   },
