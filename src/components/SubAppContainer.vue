@@ -13,7 +13,7 @@
  */
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const props = withDefaults(defineProps<{
   /** 是否正在加载子应用（qiankun mount 阶段） */

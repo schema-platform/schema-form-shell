@@ -3,7 +3,7 @@
  *
  * All menu backend calls go through this file.
  */
-import { apiClient } from '@schema-form/platform-shared/utils/apiClient'
+import { apiClient } from '@schema-platform/platform-shared/utils/apiClient'
 import type { MenuTreeNode } from '@/types/menu'
 
 export function fetchMenuRoute() {

@@ -10,7 +10,7 @@
  * - /sso/callback             → SSOCallbackView (public)
  */
 import { createRouter, createWebHistory } from 'vue-router'
-import { APP_CONFIGS } from '@schema-form/platform-shared/qiankun/config'
+import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 import { useAuthStore } from '@/stores/auth'
 
 const PUBLIC_ROUTES = new Set(['/login', '/sso/callback'])

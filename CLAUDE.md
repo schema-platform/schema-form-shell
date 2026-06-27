@@ -2,18 +2,30 @@
 
 `@schema-form/shell` — 主宿主应用，qiankun 微前端容器。
 
+## ⚡ 自动专家模式（强制）
+
+**每次对话开始或收到新任务时，必须自动执行以下流程：**
+
+1. 读取 `.claude/experts/frontend-expert.md` 获取完整项目知识库
+2. 以前端专家身份分析任务、制定方案、执行开发
+3. 遵守专家文件中的所有约束和分层规范
+
+无需用户显式要求，所有任务默认走专家流程。
+
 ## 项目规则
 
 ### 技术栈
 - Vue 3.5 + `<script setup>` + TypeScript
 - Element Plus + Pinia
 - qiankun 微前端框架
+- Web Worker 通信
 
 ### 架构规则
 - **唯一容器**：所有子应用（editor、flow、ai）通过 qiankun 加载
+- **双容器**：`ClassicSidebarLayout`（带菜单）/ `StandaloneLayout`（全屏）
 - **动态菜单**：`useMenu` + `useMenuStore` + API `/api/menus/route`
-- **布局切换**：`ClassicSidebarLayout` / `TopNavLayout`，通过 `useLayoutStore` 管理
-- **属性面板**：`PropertyPanel.vue` 根据 Widget 的 `propertyPanel` 声明动态渲染
+- **子应用注册**：内置静态 + 服务端拉取，通过 `createSubAppProps()` 统一下发通信 props
+- **Worker 通信**：`WorkerBridge` + `microApp.worker` 处理子应用间事件广播和状态同步
 
 ### 分层规范
 1. 全局状态 → Pinia Store（`src/stores/`）
@@ -22,15 +34,20 @@
 4. 布局组件 → `src/layouts/`
 5. UI 组件 → 只做渲染，不写复杂业务逻辑
 
+### 子应用通信契约
+注册时下发 props：`token` / `getRouteBase` / `getBasePath` / `onGlobalStateChange` / `setGlobalState` / `emitEvent` / `onEvent` / `offEvent` / `navigateTo` / `openInNewTab` / `getSharedState`
+
 ## 迭代规则
 
 - **禁止回滚 git**，渐进式推进
+- **禁止兜底冗余代码**，错误及时暴露
+- **能力不够就扩展，不绕过**
 - 新增布局需同时支持菜单系统和属性面板
 - 子应用注册变更需同步更新 qiankun 配置
 
 ## 常用命令
 
 ```bash
-pnpm dev      # vite dev server
+pnpm dev      # vite dev server (port 5050)
 pnpm build    # vue-tsc + vite build
 ```

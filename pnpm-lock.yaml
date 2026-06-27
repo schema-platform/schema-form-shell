@@ -20,9 +20,9 @@ importers:
       '@schema-form/business-shared':
         specifier: file:./business-shared
         version: file:business-shared(typescript@5.7.3)
-      '@schema-form/platform-shared':
-        specifier: file:../schema-form-platform-shared
-        version: '@schema-platform/platform-shared@file:../schema-form-platform-shared(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))'
+      '@schema-platform/platform-shared':
+        specifier: ^1.0.0
+        version: 1.0.0(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       element-plus:
         specifier: ^2.9.7
         version: 2.14.2(vue@3.5.39(typescript@5.7.3))
@@ -386,8 +386,8 @@ packages:
   '@schema-form/business-shared@file:business-shared':
     resolution: {directory: business-shared, type: directory}
 
-  '@schema-platform/platform-shared@file:../schema-form-platform-shared':
-    resolution: {directory: ../schema-form-platform-shared, type: directory}
+  '@schema-platform/platform-shared@1.0.0':
+    resolution: {integrity: sha512-qCZfrDoAwxZjA7yqK3vDGwK/pLriC3Sjq11yUh48yN6yc4asvJ2liBcmNXqwqAQ9whwr2BtOgsXlp6ZF9U8BFQ==, tarball: https://npm.pkg.github.com/download/@schema-platform/platform-shared/1.0.0/297a91bf7021c79c20c54493c9768ca9c11c236f}
     peerDependencies:
       element-plus: ^2.9.1
       vue: ^3.5.13
@@ -1010,7 +1010,7 @@ snapshots:
 
   '@schema-form/business-shared@file:business-shared(typescript@5.7.3)':
     dependencies:
-      '@schema-form/platform-shared': '@schema-platform/platform-shared@file:../schema-form-platform-shared(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))'
+      '@schema-platform/platform-shared': 1.0.0(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       element-plus: 2.14.2(vue@3.5.39(typescript@5.7.3))
       pinia: 2.3.1(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       vue: 3.5.39(typescript@5.7.3)
@@ -1023,7 +1023,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@schema-platform/platform-shared@file:../schema-form-platform-shared(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))':
+  '@schema-platform/platform-shared@1.0.0(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))':
     dependencies:
       '@element-plus/icons-vue': 2.3.2(vue@3.5.39(typescript@5.7.3))
       '@iconify-icons/ep': 1.2.12

@@ -6,16 +6,28 @@
  * 1. BUILTIN_APPS：内置子应用静态配置，启动时立即注册
  * 2. fetchApps()：从后端拉取配置，合并/覆盖内置配置
  * 3. 双容器：with-menu 和 standalone 分别渲染
+ * 4. 注册时向子应用下发完整通信 props
  */
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { registerMicroApps } from 'qiankun'
-import { APP_CONFIGS } from '@schema-form/platform-shared/qiankun/config'
+import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 import { fetchActiveMicroApps, type MicroAppConfig } from '@/api/microAppApi'
 import { ensureStarted } from '@/utils/qiankunStarted'
-import { useAuthStore } from '@/stores/auth'
+import { createSubAppProps, type SubAppProps } from '@/composables/useSubAppProps'
 
 const BASE_PATH = APP_CONFIGS.shell.basePath  // '/schema-platform/'
+
+// ── 全局状态 actions（由 main.ts 注入） ──
+
+let globalStateActions: {
+  onGlobalStateChange: (callback: (state: Record<string, unknown>, prev: Record<string, unknown>) => void) => void
+  setGlobalState: (state: Record<string, unknown>) => void
+} | null = null
+
+export function setGlobalStateActions(actions: typeof globalStateActions): void {
+  globalStateActions = actions
+}
 
 // ── 内置子应用静态配置 ──
 
@@ -114,11 +126,18 @@ export const useMicroAppStore = defineStore('microApp', () => {
     return `${window.location.origin}${BASE_PATH}${b.prodPath}`
   }
 
+  /** 构建子应用 props（统一通信契约） */
+  function buildProps(appName: string): SubAppProps {
+    if (!globalStateActions) {
+      throw new Error('[microApp] globalStateActions not injected. Call setGlobalStateActions() in main.ts first.')
+    }
+    return createSubAppProps(appName, globalStateActions)
+  }
+
   /** 注册内置子应用到 qiankun */
   function registerBuiltin(): void {
     if (builtinRegistered.value) return
 
-    const authStore = useAuthStore()
     const registrations = BUILTIN_APPS.map(b => ({
       name: b.name,
       entry: getBuiltinEntry(b),
@@ -128,14 +147,7 @@ export const useMicroAppStore = defineStore('microApp', () => {
         return p.startsWith(b.activeRule) ||
                p.startsWith(`${BASE_PATH}standalone/${b.name}`)
       },
-      props: {
-        token: authStore.token,
-        getRouteBase: () => {
-          const p = window.location.pathname
-          const base = BASE_PATH + b.name
-          return p.startsWith(base) ? base : ''
-        },
-      },
+      props: buildProps(b.name),
     }))
 
     registerMicroApps(registrations)
@@ -152,7 +164,6 @@ export const useMicroAppStore = defineStore('microApp', () => {
       serverLoaded.value = true
 
       // 服务端返回的非内置应用需要追加注册
-      const authStore = useAuthStore()
       const newApps = serverApps.filter(
         s => !BUILTIN_APPS.some(b => b.name === s.name),
       )
@@ -170,14 +181,7 @@ export const useMicroAppStore = defineStore('microApp', () => {
               return p.startsWith(`${BASE_PATH}standalone/${app.name}`) ||
                      p.startsWith(`${BASE_PATH}app/${app.name}`)
             },
-            props: {
-              token: authStore.token,
-              getRouteBase: () => {
-                const p = window.location.pathname
-                const base = BASE_PATH + app.name
-                return p.startsWith(base) ? base : ''
-              },
-            },
+            props: buildProps(app.name),
           })),
         )
       }

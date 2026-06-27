@@ -3,7 +3,7 @@
  *
  * All auth backend calls go through this file.
  */
-import { apiClient } from '@schema-form/platform-shared/utils/apiClient'
+import { apiClient } from '@schema-platform/platform-shared/utils/apiClient'
 import type { LoginPayload, LoginResponse, AuthUser } from '@schema-form/business-shared/utils/authTypes'
 
 export function login(payload: LoginPayload) {

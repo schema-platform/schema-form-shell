@@ -1,57 +1,191 @@
 /**
  * MicroAppManageView — 微前端子应用管理界面
  *
- * 展示所有注册的子应用（内置 + 服务端），支持：
- * - 查看子应用状态、配置
- * - 手动刷新服务端配置
- * - 子应用入口快速跳转
+ * 功能：
+ * - 查看所有子应用（内置 + 服务端）
+ * - 创建 / 编辑 / 删除子应用
+ * - 启用 / 停用子应用
+ * - 刷新服务端配置
+ * - 快速跳转到子应用
  */
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
 import { useMicroAppStore, BUILTIN_APPS } from '@/stores/microApp'
-import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+import {
+  fetchAllMicroApps,
+  deleteMicroApp,
+  toggleMicroAppStatus,
+  type MicroAppConfig,
+} from '@/api/microAppApi'
+import MicroAppEditDialog from '@/components/MicroAppEditDialog.vue'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const microAppStore = useMicroAppStore()
 
 const builtinNames = computed(() => new Set(BUILTIN_APPS.map(b => b.name)))
 
-function refreshServer() {
-  microAppStore.fetchApps()
+// ── 编辑对话框 ──
+
+const dialogVisible = ref(false)
+const editingApp = ref<MicroAppConfig | null>(null)
+
+function openCreate() {
+  editingApp.value = null
+  dialogVisible.value = true
+}
+
+function openEdit(app: MicroAppConfig) {
+  editingApp.value = app
+  dialogVisible.value = true
+}
+
+function handleSaved() {
+  refreshServer()
+}
+
+// ── CRUD 操作 ──
+
+async function refreshServer() {
+  try {
+    await microAppStore.fetchApps()
+    // 同时拉取全量（含停用）用于管理页展示
+    const allApps = await fetchAllMicroApps()
+    serverApps.value = allApps
+  } catch {
+    ElMessage.error('刷新失败')
+  }
+}
+
+async function handleToggleStatus(app: MicroAppConfig) {
+  const newStatus = app.status === 'active' ? 'inactive' : 'active'
+  const label = newStatus === 'active' ? '启用' : '停用'
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要${label}「${app.displayName}」吗？`,
+      '确认操作',
+      { type: 'warning' },
+    )
+    await toggleMicroAppStatus(app.id, newStatus)
+    ElMessage.success(`已${label}`)
+    await refreshServer()
+  } catch {
+    // 用户取消或操作失败
+  }
+}
+
+async function handleDelete(app: MicroAppConfig) {
+  if (builtinNames.value.has(app.name)) {
+    ElMessage.warning('内置应用不可删除')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除「${app.displayName}」吗？此操作不可恢复。`,
+      '确认删除',
+      { type: 'error', confirmButtonText: '删除', confirmButtonClass: 'el-button--danger' },
+    )
+    await deleteMicroApp(app.id)
+    ElMessage.success('已删除')
+    await refreshServer()
+  } catch {
+    // 用户取消或操作失败
+  }
 }
 
 function openApp(name: string) {
   window.open(`/schema-platform/app/${name}/`, '_blank')
 }
+
+// ── 服务端应用列表（含停用） ──
+
+const serverApps = ref<MicroAppConfig[]>([])
+
+/** 合并展示列表：内置 + 服务端（去重） */
+const displayApps = computed(() => {
+  const merged = new Map<string, MicroAppConfig & { isBuiltin: boolean }>()
+
+  // 内置
+  for (const b of BUILTIN_APPS) {
+    merged.set(b.name, {
+      id: `builtin-${b.name}`,
+      name: b.name,
+      displayName: b.displayName,
+      url: '',
+      icon: b.icon,
+      layout: b.layout,
+      activeRule: b.activeRule,
+      permissions: [],
+      status: 'active',
+      sort: b.sort,
+      isBuiltin: true,
+    })
+  }
+
+  // 服务端覆盖
+  for (const s of serverApps.value) {
+    merged.set(s.name, { ...s, isBuiltin: builtinNames.value.has(s.name) })
+  }
+
+  return Array.from(merged.values()).sort((a, b) => a.sort - b.sort)
+})
+
+// ── 统计 ──
+
+const stats = computed(() => ({
+  total: displayApps.value.length,
+  builtin: BUILTIN_APPS.length,
+  server: serverApps.value.length,
+  active: displayApps.value.filter(a => a.status === 'active').length,
+  inactive: displayApps.value.filter(a => a.status === 'inactive').length,
+}))
+
+onMounted(() => {
+  refreshServer()
+})
 </script>
 
 <template>
   <div :class="$style.container">
+    <!-- 头部 -->
     <div :class="$style.header">
-      <h1 :class="$style.title">微应用管理</h1>
-      <el-button type="primary" :loading="!microAppStore.serverLoaded" @click="refreshServer">
-        <AppIcon name="refresh" :size="16" />
-        刷新服务端配置
-      </el-button>
+      <div :class="$style.headerLeft">
+        <h1 :class="$style.title">微应用管理</h1>
+        <p :class="$style.desc">
+          管理所有注册的子应用。内置应用启动即用，服务端应用支持动态增删改。
+        </p>
+      </div>
+      <div :class="$style.headerActions">
+        <el-button @click="refreshServer">
+          <AppIcon name="refresh" :size="16" />
+          刷新
+        </el-button>
+        <el-button type="primary" @click="openCreate">
+          <AppIcon name="plus" :size="16" />
+          创建子应用
+        </el-button>
+      </div>
     </div>
-
-    <p :class="$style.desc">
-      子应用注册策略：内置静态配置（启动即用）+ 服务端拉取（动态覆盖）。
-      内置应用在无网络时仍可独立访问。
-    </p>
 
     <!-- 统计卡片 -->
     <div :class="$style.stats">
       <div :class="$style.statCard">
-        <div :class="$style.statValue">{{ microAppStore.allApps.length }}</div>
+        <div :class="$style.statValue">{{ stats.total }}</div>
         <div :class="$style.statLabel">总子应用</div>
       </div>
       <div :class="$style.statCard">
-        <div :class="$style.statValue">{{ BUILTIN_APPS.length }}</div>
+        <div :class="$style.statValue">{{ stats.builtin }}</div>
         <div :class="$style.statLabel">内置应用</div>
       </div>
       <div :class="$style.statCard">
-        <div :class="$style.statValue">{{ microAppStore.serverLoaded ? microAppStore.apps.length : '...' }}</div>
+        <div :class="$style.statValue">{{ stats.server }}</div>
         <div :class="$style.statLabel">服务端配置</div>
+      </div>
+      <div :class="$style.statCard">
+        <div :class="$style.statValue">{{ stats.active }}</div>
+        <div :class="$style.statLabel">已启用</div>
       </div>
     </div>
 
@@ -68,23 +202,41 @@ function openApp(name: string) {
     <!-- 子应用列表 -->
     <div :class="$style.appGrid">
       <div
-        v-for="app in microAppStore.allApps"
+        v-for="app in displayApps"
         :key="app.name"
-        :class="$style.appCard"
+        :class="[$style.appCard, { [$style.appInactive]: app.status === 'inactive' }]"
       >
         <div :class="$style.appHeader">
           <div :class="$style.appIcon">
             <AppIcon :name="app.icon || 'box'" :size="28" />
           </div>
           <div :class="$style.appInfo">
-            <div :class="$style.appName">{{ app.displayName }}</div>
+            <div :class="$style.appName">
+              {{ app.displayName }}
+              <el-tag
+                v-if="(app as any).isBuiltin"
+                type="success"
+                size="small"
+                :class="$style.tag"
+              >
+                内置
+              </el-tag>
+              <el-tag
+                v-else
+                type="info"
+                size="small"
+                :class="$style.tag"
+              >
+                服务端
+              </el-tag>
+            </div>
             <div :class="$style.appId">{{ app.name }}</div>
           </div>
           <el-tag
-            :type="builtinNames.has(app.name) ? 'success' : 'info'"
+            :type="app.status === 'active' ? 'success' : 'danger'"
             size="small"
           >
-            {{ builtinNames.has(app.name) ? '内置' : '服务端' }}
+            {{ app.status === 'active' ? '启用' : '停用' }}
           </el-tag>
         </div>
 
@@ -98,25 +250,58 @@ function openApp(name: string) {
             <span :class="$style.monoText">{{ app.activeRule }}</span>
           </div>
           <div :class="$style.metaRow">
-            <span :class="$style.metaLabel">状态</span>
-            <el-tag :type="app.status === 'active' ? 'success' : 'danger'" size="small">
-              {{ app.status === 'active' ? '活跃' : '停用' }}
-            </el-tag>
+            <span :class="$style.metaLabel">排序</span>
+            <span>{{ app.sort }}</span>
           </div>
         </div>
 
         <div :class="$style.appActions">
           <el-button
             type="primary"
+            text
             size="small"
             :disabled="app.status !== 'active'"
             @click="openApp(app.name)"
           >
             打开
           </el-button>
+          <el-button
+            v-if="!(app as any).isBuiltin"
+            type="primary"
+            text
+            size="small"
+            @click="openEdit(app)"
+          >
+            编辑
+          </el-button>
+          <el-button
+            v-if="!(app as any).isBuiltin"
+            :type="app.status === 'active' ? 'warning' : 'success'"
+            text
+            size="small"
+            @click="handleToggleStatus(app)"
+          >
+            {{ app.status === 'active' ? '停用' : '启用' }}
+          </el-button>
+          <el-button
+            v-if="!(app as any).isBuiltin"
+            type="danger"
+            text
+            size="small"
+            @click="handleDelete(app)"
+          >
+            删除
+          </el-button>
         </div>
       </div>
     </div>
+
+    <!-- 编辑对话框 -->
+    <MicroAppEditDialog
+      v-model:visible="dialogVisible"
+      :app="editingApp"
+      @saved="handleSaved"
+    />
   </div>
 </template>
 
@@ -129,28 +314,40 @@ function openApp(name: string) {
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.headerLeft {
+  flex: 1;
+  min-width: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .title {
   font-size: 24px;
   font-weight: 700;
   color: var(--text-color-primary);
-  margin: 0;
+  margin: 0 0 4px 0;
 }
 
 .desc {
   font-size: 14px;
   color: var(--text-color-secondary);
-  margin: 0 0 24px 0;
+  margin: 0;
   line-height: 1.6;
 }
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -197,6 +394,10 @@ function openApp(name: string) {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
+.appInactive {
+  opacity: 0.65;
+}
+
 .appHeader {
   display: flex;
   align-items: center;
@@ -225,12 +426,20 @@ function openApp(name: string) {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  flex-shrink: 0;
 }
 
 .appId {
   font-size: 12px;
   color: var(--text-color-secondary);
   font-family: monospace;
+  margin-top: 2px;
 }
 
 .appMeta {
@@ -258,10 +467,16 @@ function openApp(name: string) {
   font-family: monospace;
   font-size: 12px;
   color: var(--text-color-regular);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
 }
 
 .appActions {
   display: flex;
   justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 </style>

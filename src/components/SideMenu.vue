@@ -8,9 +8,9 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMenu } from '@/composables/useMenu'
-import { resolveIconName } from '@schema-form/platform-shared/utils/iconResolver'
+import { resolveIconName } from '@schema-platform/platform-shared/utils/iconResolver'
 import type { MenuTreeNode } from '@/types/menu'
-import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 defineProps<{
   collapsed: boolean

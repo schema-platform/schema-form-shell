@@ -14,7 +14,7 @@ import Breadcrumb from '@/components/Breadcrumb.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
 import SubAppContainer from '@/components/SubAppContainer.vue'
-import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const layoutStore = useLayoutStore()
 layoutStore.restoreCollapsed()

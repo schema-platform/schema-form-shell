@@ -13,14 +13,14 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import 'element-plus/dist/index.css'
-import '@schema-form/platform-shared/styles/theme.scss'
-import '@schema-form/platform-shared/styles/css-variables.scss'
+import '@schema-platform/platform-shared/styles/theme.scss'
+import '@schema-platform/platform-shared/styles/css-variables.scss'
 import { initGlobalState } from 'qiankun'
 import { useAuthStore } from '@/stores/auth'
-import { useMicroAppStore } from '@/stores/microApp'
-import { setupElementPlus } from '@schema-form/platform-shared/config/element'
+import { useMicroAppStore, setGlobalStateActions } from '@/stores/microApp'
+import { setupElementPlus } from '@schema-platform/platform-shared/config/element'
 import { fetchCurrentUser } from '@/api/authApi'
-import { setTokenProvider, setUnauthorizedHandler } from '@schema-form/platform-shared/utils/apiClient'
+import { setTokenProvider, setUnauthorizedHandler } from '@schema-platform/platform-shared/utils/apiClient'
 import { cancelAutoRefresh } from '@/composables/useAuth'
 
 import App from './App.vue'
@@ -62,6 +62,16 @@ async function restoreSession(): Promise<void> {
 }
 
 // ── 子应用注册：内置立即注册 + 服务端拉取合并 ──
+
+// 注入 globalState actions 到 microAppStore（用于子应用 props 下发）
+setGlobalStateActions({
+  onGlobalStateChange: (callback) => {
+    actions.onGlobalStateChange(callback)
+  },
+  setGlobalState: (state) => {
+    actions.setGlobalState(state)
+  },
+})
 
 const microAppStore = useMicroAppStore()
 

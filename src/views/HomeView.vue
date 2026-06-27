@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useMicroAppStore } from '@/stores/microApp'
-import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const router = useRouter()
 const microAppStore = useMicroAppStore()
