@@ -1,9 +1,9 @@
 /**
- * MainLayout — 首页布局
+ * MainLayout — 首页 + 管理页面布局
  *
  * 职责：
  * - 带菜单的布局框架
- * - 内容区渲染 HomeView（通过 router-view）
+ * - 内容区渲染 HomeView 或 MicroAppManageView（通过 router-view）
  */
 <script setup lang="ts">
 import { useLayoutStore } from '@schema-form/business-shared/stores/layout'

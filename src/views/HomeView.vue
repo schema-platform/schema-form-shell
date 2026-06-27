@@ -1,32 +1,56 @@
+/**
+ * HomeView — 首页
+ *
+ * 展示所有可用子应用（从 microAppStore.allApps 读取）
+ * 支持动态菜单配置
+ */
+<script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useMicroAppStore } from '@/stores/microApp'
+import AppIcon from '@schema-form/platform-shared/components/common/AppIcon.vue'
+
+const router = useRouter()
+const microAppStore = useMicroAppStore()
+
+function openApp(name: string) {
+  router.push(`/app/${name}/`)
+}
+</script>
+
 <template>
   <div :class="$style.container">
     <h1 :class="$style.title">表单设计器平台</h1>
     <p :class="$style.subtitle">低代码表单引擎与流程引擎</p>
 
     <div :class="$style.grid">
-      <router-link to="/editor" :class="$style.card">
-        <div :class="$style.icon"><AppIcon name="edit" :size="48" /></div>
-        <h3 :class="$style.cardTitle">表单设计器</h3>
-        <p :class="$style.cardDesc">可视化设计表单，支持多种组件和布局</p>
-      </router-link>
+      <div
+        v-for="app in microAppStore.allApps"
+        :key="app.name"
+        :class="$style.card"
+        @click="openApp(app.name)"
+      >
+        <div :class="$style.icon">
+          <AppIcon :name="app.icon || 'box'" :size="48" />
+        </div>
+        <h3 :class="$style.cardTitle">{{ app.displayName }}</h3>
+        <p :class="$style.cardDesc">
+          {{ app.name === 'editor' ? '可视化设计表单，支持多种组件和布局' :
+             app.name === 'flow' ? 'BPMN 流程编排，支持审批、自动化' :
+             app.name === 'ai' ? 'AI 对话式生成表单和流程' :
+             `子应用: ${app.name}` }}
+        </p>
+      </div>
+    </div>
 
-      <router-link to="/flow" :class="$style.card">
-        <div :class="$style.icon"><AppIcon name="connection" :size="48" /></div>
-        <h3 :class="$style.cardTitle">流程设计器</h3>
-        <p :class="$style.cardDesc">BPMN 流程编排，支持审批、自动化</p>
-      </router-link>
-
-      <router-link to="/ai" :class="$style.card">
-        <div :class="$style.icon"><AppIcon name="monitor" :size="48" /></div>
-        <h3 :class="$style.cardTitle">AI 应用</h3>
-        <p :class="$style.cardDesc">AI 对话式生成表单和流程</p>
-      </router-link>
+    <!-- 管理入口 -->
+    <div :class="$style.manageEntry">
+      <el-button text type="primary" @click="router.push('/admin/micro-apps')">
+        <AppIcon name="setting" :size="16" />
+        微应用管理
+      </el-button>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-</script>
 
 <style module>
 .container {
@@ -87,5 +111,10 @@
   color: var(--text-color-secondary);
   margin: 0;
   line-height: 1.6;
+}
+
+.manageEntry {
+  margin-top: 32px;
+  text-align: center;
 }
 </style>

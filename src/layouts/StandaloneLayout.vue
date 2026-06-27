@@ -1,17 +1,21 @@
 /**
  * StandaloneLayout — 不带菜单的微应用容器
  *
- * 职责：
- * - 提供 #micro-container 给 qiankun 挂载子应用
- * - 全屏无 chrome
- * - onMounted 时调用 start() 启动 qiankun
+ * 全屏无 chrome，仅子应用区域 loading
  */
 <script setup lang="ts">
+import { ref } from 'vue'
+import SubAppContainer from '@/components/SubAppContainer.vue'
+
+const subAppLoading = ref(true)
 </script>
 
 <template>
   <div :class="$style.standalone">
-    <div id="micro-container" :class="$style.microContainer"></div>
+    <SubAppContainer
+      :loading="subAppLoading"
+      @retry="subAppLoading = true"
+    />
   </div>
 </template>
 
@@ -21,10 +25,5 @@
   height: 100vh;
   overflow: hidden;
   background: var(--bg-color-page);
-}
-
-.microContainer {
-  width: 100%;
-  height: 100%;
 }
 </style>

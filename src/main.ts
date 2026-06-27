@@ -1,13 +1,14 @@
 /**
  * Shell main entry
  *
- * Initializes:
- * 1. Vue app with Pinia + Router + Element Plus
- * 2. Qiankun global state (token sync)
- * 3. Restore user session (fetchUser if token exists)
- * 4. Fetches micro-app configs from backend (registers with qiankun)
+ * 初始化顺序：
+ * 1. Vue app + Pinia + Router + Element Plus
+ * 2. Qiankun global state（token 同步）
+ * 3. 恢复用户会话（fetchUser）
+ * 4. 注册内置子应用（静态配置，立即可用）
+ * 5. 拉取服务端子应用配置（合并/覆盖）
  *
- * Qiankun start() is called by layout containers on mounted.
+ * Qiankun start() 由布局容器 mounted 时调用。
  */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -60,9 +61,14 @@ async function restoreSession(): Promise<void> {
   }
 }
 
-// 并行恢复会话和加载微应用配置（注册到 qiankun）
+// ── 子应用注册：内置立即注册 + 服务端拉取合并 ──
+
 const microAppStore = useMicroAppStore()
 
+// 1. 内置子应用立即注册（不依赖网络）
+microAppStore.registerBuiltin()
+
+// 2. 并行：恢复会话 + 拉取服务端配置
 Promise.all([
   restoreSession(),
   microAppStore.fetchApps().catch((err: unknown) => {
