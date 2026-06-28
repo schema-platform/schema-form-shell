@@ -12,7 +12,7 @@ import type { AuthUser, AuthLoadingState } from '@schema-form/business-shared/ut
 
 const TOKEN_KEY = 'sfp_access_token'
 const REFRESH_KEY = 'sfp_refresh_token'
-const USER_KEY_KEY = 'shell_user_key'
+const USER_KEY_KEY = 'sfp_user_key'
 
 export const useAuthStore = defineStore('auth', () => {
   // ================================================================

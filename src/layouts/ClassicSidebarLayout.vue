@@ -23,9 +23,7 @@ const subAppLoading = ref(true)
 
 // qiankun 子应用挂载完成后关闭 loading
 // 通过 MutationObserver 检测 #micro-container 内容变化
-function onSubAppMounted() {
-  subAppLoading.value = false
-}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 
 function toggleCollapse() {
   layoutStore.toggleCollapse()

@@ -23,7 +23,6 @@
  */
 import { onUnmounted, ref, readonly } from 'vue'
 import { WorkerBridge } from '@/workers/WorkerBridge'
-import type { WorkerMessage } from '@/workers/WorkerBridge'
 
 // ── 单例 WorkerBridge ──
 
@@ -120,10 +119,10 @@ export function useMicroAppBridge() {
 
   /**
    * 移除事件监听
-   * @param event - 事件名称
+   * @param _event - 事件名称
    * @param handler - 处理函数
    */
-  function off(event: string, handler: (payload: BroadcastEvent) => void): void {
+  function off(_event: string, handler: (payload: BroadcastEvent) => void): void {
     bridge.off('event:broadcast', handler as (payload: unknown) => void)
   }
 
@@ -188,7 +187,7 @@ export function useMicroAppBridge() {
    * @param name - 子应用名称
    */
   function ping(name: string): void {
-    bridge.post('ping', undefined, name)
+    bridge.post('ping', { name })
   }
 
   // ── 监听注册 ──
@@ -199,7 +198,7 @@ export function useMicroAppBridge() {
    * @param source - 来源标识
    */
   function listen(event: string, source = 'shell'): void {
-    bridge.post('event:listen', { event }, source)
+    bridge.post('event:listen', { event, source })
   }
 
   /**
@@ -208,7 +207,7 @@ export function useMicroAppBridge() {
    * @param source - 来源标识
    */
   function unlisten(event: string, source = 'shell'): void {
-    bridge.post('event:unlisten', { event }, source)
+    bridge.post('event:unlisten', { event, source })
   }
 
   // ── 生命周期 ──

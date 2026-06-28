@@ -66,10 +66,11 @@ export interface SubAppProps {
   /** 在新窗口打开路由 */
   openInNewTab: (path: string) => void
   /** 获取 shell 共享状态 */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getSharedState: () => {
-    user: ReturnType<ReturnType<typeof useAuthStore>['$state']>['user']
-    menus: ReturnType<ReturnType<typeof useMenuStore>['$state']>['menuTree']
-    apps: ReturnType<ReturnType<typeof useMicroAppStore>['$state']>['allApps']
+    user: any
+    menus: any
+    apps: any
   }
   /** 获取子应用基础路径前缀 */
   getBasePath: () => string

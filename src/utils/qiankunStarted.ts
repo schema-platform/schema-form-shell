@@ -8,6 +8,6 @@ let started = false
 export function ensureStarted(): void {
   if (!started) {
     started = true
-    start({ sandbox: false, prefetch: 'none' })
+    start({ sandbox: false })
   }
 }
