@@ -94,7 +94,7 @@ export function createSubAppProps(
   const router = useRouter()
 
   return {
-    token: authStore.token ?? '',
+    token: authStore.accessToken ?? '',
 
     getRouteBase() {
       const p = window.location.pathname

@@ -1,18 +1,14 @@
 /**
- * useAuth -- authentication business logic
+ * useAuth -- shell 认证业务逻辑
  *
- * Responsibilities:
- * - Call /api/auth/login, /api/auth/me, /api/auth/refresh, /api/auth/logout
- * - Coordinate useAuthStore loading/token/user state
- * - Auto-refresh access token before expiry
- * - Post-login redirect, post-logout redirect
+ * 基于 platform-shared 的 useAuthStore，添加：
+ * - SSO 登录（ssoToken API）
+ * - 与 shell router 的跳转集成
+ * - 401 handler 中 router.push('/login')
  *
- * Dependencies:
- * - useAuthStore (state holder)
- * - apiClient (HTTP)
- * - vue-router (navigation)
- *
- * Note: tokenProvider + 401 handler are initialized once in main.ts
+ * ⚠️ 不再调用 setTokenProvider / setUnauthorizedHandler
+ *    由 platform-shared 的 useAuth() 在 LoginView 挂载时自动注入。
+ *    shell 的 main.ts 中的 tokenProvider 设置已移除，避免被覆盖。
  */
 import { onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -36,7 +32,7 @@ export function useAuth() {
   const store = useAuthStore()
   const router = useRouter()
   const route = useRoute()
-  const { user, token, refreshToken, isAuthenticated, loading } = storeToRefs(store)
+  const { user, accessToken: token, refreshToken, isAuthenticated, loading } = storeToRefs(store)
 
   /**
    * Schedule automatic token refresh 60s before expiry.
@@ -66,7 +62,7 @@ export function useAuth() {
 
     try {
       const res = await apiRefreshToken(rt)
-      store.setToken(res.accessToken)
+      store.setTokens(res.accessToken)
       scheduleRefresh(res.expiresIn)
     } catch {
       // Refresh failed -- clear auth state, user must re-login
@@ -83,7 +79,7 @@ export function useAuth() {
     store.setLoading('login', true)
     try {
       const res = await ssoToken(code, 'shell', `${window.location.origin}/schema-platform/sso/callback`)
-      store.setToken(res.accessToken, res.refreshToken)
+      store.setTokens(res.accessToken, res.refreshToken)
       // Fetch user info after getting token
       const userRes = await fetchCurrentUser()
       store.setUser(userRes)
@@ -104,7 +100,7 @@ export function useAuth() {
     store.setLoading('login', true)
     try {
       const res = await apiLogin(payload)
-      store.setToken(res.accessToken, res.refreshToken)
+      store.setTokens(res.accessToken, res.refreshToken)
       store.setUser(res.user)
       store.setUserKey(res.user.id)
       scheduleRefresh(res.expiresIn)
@@ -120,7 +116,7 @@ export function useAuth() {
    * Used to restore login state after page refresh.
    */
   async function fetchUser(): Promise<void> {
-    if (!token.value) return
+    if (!store.accessToken) return
 
     store.setLoading('fetchUser', true)
     try {

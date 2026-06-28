@@ -1,101 +1,25 @@
 /**
- * useAuthStore -- auth state management
+ * useAuthStore -- 统一使用 platform-shared 的认证 store
  *
- * Responsibilities:
- * - Hold user, token, isAuthenticated state
- * - Persist token to localStorage
- * - Provide thin set/reset actions (async logic lives in useAuth composable)
+ * 本地不再维护独立 store，避免与 platform-shared 的 useAuthStore（同名 'auth'）
+ * 产生两套实例导致 token 状态不同步 → 路由守卫死循环。
+ *
+ * 字段映射：
+ *   platform-shared: accessToken / refreshToken / userKey
+ *   shell 旧代码:    token / refreshToken / userKey
+ *
+ * 兼容层：导出 token getter 供 shell 旧代码使用。
  */
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { AuthUser, AuthLoadingState } from '@schema-form/business-shared/utils/authTypes'
+export { useAuthStore } from '@schema-platform/platform-shared/utils/stores/authStore'
 
-const TOKEN_KEY = 'sfp_access_token'
-const REFRESH_KEY = 'sfp_refresh_token'
-const USER_KEY_KEY = 'sfp_user_key'
+/**
+ * 兼容 getter — 从 platform-shared store 读取 accessToken
+ * 供 shell 中仍使用 `authStore.token` 的代码平滑迁移。
+ */
+import { useAuthStore as _useSharedAuthStore } from '@schema-platform/platform-shared/utils/stores/authStore'
 
-export const useAuthStore = defineStore('auth', () => {
-  // ================================================================
-  // State
-  // ================================================================
-
-  const user = ref<AuthUser | null>(null)
-  const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
-  const refreshToken = ref<string | null>(localStorage.getItem(REFRESH_KEY))
-  const userKey = ref<string | null>(localStorage.getItem(USER_KEY_KEY))
-  const loading = ref<AuthLoadingState>({ login: false, fetchUser: false })
-
-  // ================================================================
-  // Getters
-  // ================================================================
-
-  const isAuthenticated = computed(() => token.value !== null)
-
-  // ================================================================
-  // Actions (thin setters)
-  // ================================================================
-
-  function setToken(accessToken: string | null, refresh?: string | null): void {
-    token.value = accessToken
-    if (accessToken) {
-      localStorage.setItem(TOKEN_KEY, accessToken)
-    } else {
-      localStorage.removeItem(TOKEN_KEY)
-    }
-    if (refresh !== undefined) {
-      refreshToken.value = refresh
-      if (refresh) {
-        localStorage.setItem(REFRESH_KEY, refresh)
-      } else {
-        localStorage.removeItem(REFRESH_KEY)
-      }
-    }
-  }
-
-  /** 设置用户唯一标识（如 userId），用于跨 tab / 跨应用识别当前登录用户 */
-  function setUserKey(key: string | null): void {
-    userKey.value = key
-    if (key) {
-      localStorage.setItem(USER_KEY_KEY, key)
-    } else {
-      localStorage.removeItem(USER_KEY_KEY)
-    }
-  }
-
-  function setUser(value: AuthUser | null): void {
-    user.value = value
-  }
-
-  function setLoading(key: keyof AuthLoadingState, value: boolean): void {
-    loading.value[key] = value
-  }
-
-  /** Clear all auth state */
-  function reset(): void {
-    user.value = null
-    token.value = null
-    refreshToken.value = null
-    userKey.value = null
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(REFRESH_KEY)
-    localStorage.removeItem(USER_KEY_KEY)
-    loading.value = { login: false, fetchUser: false }
-  }
-
-  return {
-    // state
-    user,
-    token,
-    refreshToken,
-    userKey,
-    loading,
-    // getters
-    isAuthenticated,
-    // actions
-    setToken,
-    setUserKey,
-    setUser,
-    setLoading,
-    reset,
-  }
-})
+/** 获取当前 token（兼容旧代码 authStore.token 的用法） */
+export function getToken(): string | null {
+  const store = _useSharedAuthStore()
+  return store.accessToken
+}

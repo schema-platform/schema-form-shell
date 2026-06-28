@@ -4,11 +4,15 @@
  * 初始化顺序：
  * 1. Vue app + Pinia + Router + Element Plus
  * 2. Qiankun global state（token 同步）
- * 3. 恢复用户会话（fetchUser）
- * 4. 注册内置子应用（静态配置，立即可用）
- * 5. 拉取服务端子应用配置（合并/覆盖）
+ * 3. 注入 401 handler（带 router.push）
+ * 4. 恢复用户会话（fetchUser）
+ * 5. 注册内置子应用（静态配置，立即可用）
+ * 6. 拉取服务端子应用配置（合并/覆盖）
  *
  * Qiankun start() 由布局容器 mounted 时调用。
+ *
+ * ⚠️ 认证 store 统一使用 platform-shared 的 useAuthStore（同名 'auth'）。
+ *    不再维护本地 useAuthStore，避免两套实例导致 token 状态不同步。
  */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
@@ -16,11 +20,11 @@ import 'element-plus/dist/index.css'
 import '@schema-platform/platform-shared/styles/theme.scss'
 import '@schema-platform/platform-shared/styles/css-variables.scss'
 import { initGlobalState } from 'qiankun'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@schema-platform/platform-shared/utils/stores/authStore'
 import { useMicroAppStore, setGlobalStateActions } from '@/stores/microApp'
 import { setupElementPlus } from '@schema-platform/platform-shared/config/element'
 import { fetchCurrentUser } from '@/api/authApi'
-import { setTokenProvider, setUnauthorizedHandler } from '@schema-platform/platform-shared/utils/apiClient'
+import { setUnauthorizedHandler } from '@schema-platform/platform-shared/utils/apiClient'
 import { cancelAutoRefresh } from '@/composables/useAuth'
 
 import App from './App.vue'
@@ -39,11 +43,13 @@ const actions = initGlobalState(initialState)
 
 const authStore = useAuthStore()
 authStore.$subscribe((_mutation, state) => {
-  actions.setGlobalState({ token: state.token || '' })
+  actions.setGlobalState({ token: state.accessToken || '' })
 })
 
-// 注入 tokenProvider + 401 handler
-setTokenProvider(() => authStore.token)
+// 注入 401 handler — 必须在 LoginView 挂载之前设置
+// platform-shared 的 useAuth() 也会调用 setUnauthorizedHandler，
+// 但 apiClient 的 setUnauthorizedHandler 有 "if (!onUnauthorized)" 保护，
+// 所以 shell 先设置的 handler 不会被覆盖。
 setUnauthorizedHandler(() => {
   cancelAutoRefresh()
   authStore.reset()
@@ -52,7 +58,7 @@ setUnauthorizedHandler(() => {
 
 // 恢复用户会话
 async function restoreSession(): Promise<void> {
-  if (!authStore.token || authStore.user) return
+  if (!authStore.accessToken || authStore.user) return
   try {
     const user = await fetchCurrentUser()
     authStore.setUser(user)
