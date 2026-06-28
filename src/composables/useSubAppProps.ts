@@ -15,13 +15,25 @@
  * - navigateTo: (path) => void       — shell 路由导航
  * - getSharedState: () => object     — 获取 shell 共享状态（用户、菜单等）
  */
-import { useRouter } from 'vue-router'
+import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMenuStore } from '@/stores/menu'
 import { useMicroAppStore } from '@/stores/microApp'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 
 const BASE_PATH = APP_CONFIGS.shell.basePath
+
+// ── Router 引用（由 main.ts 通过 setRouter() 注入，避免在 setup 外调用 useRouter） ──
+
+let routerRef: Router | null = null
+
+/**
+ * 注入 router 实例，供 createSubAppProps 在 setup 外使用。
+ * 应在 main.ts 中 app.use(router) 之后调用。
+ */
+export function setRouter(router: Router): void {
+  routerRef = router
+}
 
 // ── 事件总线（shell 级别，不经过 Worker） ──
 
@@ -93,7 +105,10 @@ export function createSubAppProps(
   const authStore = useAuthStore()
   const menuStore = useMenuStore()
   const microAppStore = useMicroAppStore()
-  const router = useRouter()
+  if (!routerRef) {
+    throw new Error('[useSubAppProps] router not initialized. Call setRouter() in main.ts after app.use(router).')
+  }
+  const router = routerRef
 
   return {
     token: authStore.accessToken ?? '',
@@ -101,8 +116,12 @@ export function createSubAppProps(
 
     getRouteBase() {
       const p = window.location.pathname
-      const base = BASE_PATH + appName
-      return p.startsWith(base) ? base : ''
+      // 同时匹配 /app/appName 和 /standalone/appName 两种路径
+      const appBase = `${BASE_PATH}app/${appName}`
+      const standaloneBase = `${BASE_PATH}standalone/${appName}`
+      if (p.startsWith(appBase)) return appBase
+      if (p.startsWith(standaloneBase)) return standaloneBase
+      return ''
     },
 
     getBasePath() {

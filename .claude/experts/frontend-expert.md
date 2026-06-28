@@ -56,7 +56,6 @@ src/
 ├── types/                # 类型定义
 │   └── menu.ts
 ├── utils/                # 工具函数
-│   └── qiankunStarted.ts
 ├── views/                # 页面组件
 │   ├── HomeView.vue      # 首页（子应用卡片）
 │   ├── LoginView.vue

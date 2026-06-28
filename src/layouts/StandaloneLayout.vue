@@ -6,31 +6,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
-import { ensureStarted } from '@/utils/qiankunStarted'
+import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const loading = ref(true)
 
-// 监听子应用挂载完成
-let observer: MutationObserver | null = null
+function handleSubAppMounted() {
+  console.log('[StandaloneLayout] sub-app mounted via event')
+  loading.value = false
+}
 
 onMounted(() => {
-  ensureStarted()
-
-  // 通过 MutationObserver 检测 micro-container 内容变化
-  const container = document.getElementById('micro-container')
-  if (container) {
-    observer = new MutationObserver(() => {
-      if (container.children.length > 0) {
-        loading.value = false
-        observer?.disconnect()
-      }
-    })
-    observer.observe(container, { childList: true })
-  }
+  console.log('[StandaloneLayout] mounted')
+  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
 })
 
 onUnmounted(() => {
-  observer?.disconnect()
+  offShellEvent('shell:sub-app-mounted', handleSubAppMounted)
 })
 </script>
 
@@ -79,5 +70,12 @@ onUnmounted(() => {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+</style>
+
+<!-- 全局：隐藏子应用 index.html 的 #loading -->
+<style>
+#micro-container #loading {
+  display: none !important;
 }
 </style>

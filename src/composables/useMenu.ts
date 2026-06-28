@@ -27,9 +27,10 @@ export function useMenu() {
     return node.children.length > 0
   }
 
-  /** Fetch menu tree for current user */
+  /** Fetch menu tree for current user (跳过已加载或正在加载的) */
   async function fetchMenus(): Promise<void> {
     if (!authStore.isAuthenticated) return
+    if (loaded.value || loading.value) return
 
     menuStore.setLoading(true)
     menuStore.setError(null)

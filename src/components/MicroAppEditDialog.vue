@@ -30,13 +30,24 @@ const defaultForm: MicroAppFormData = {
   url: '',
   icon: 'box',
   layout: 'without-menu',
-  activeRule: '',
+  activeRule: [],
   permissions: [],
   status: 'active',
   sort: 100,
 }
 
 const form = ref<MicroAppFormData>({ ...defaultForm })
+
+/** activeRule 显示用字符串（逗号分隔） */
+const activeRuleStr = ref('')
+
+// 同步 activeRuleStr ↔ form.activeRule
+watch(activeRuleStr, (val) => {
+  form.value.activeRule = val
+    .split(/[,，\n]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+})
 
 const rules: FormRules = {
   name: [
@@ -50,26 +61,35 @@ const rules: FormRules = {
     { required: true, message: '请输入入口 URL', trigger: 'blur' },
   ],
   activeRule: [
-    { required: true, message: '请输入激活规则', trigger: 'blur' },
+    {
+      required: true,
+      type: 'array',
+      min: 1,
+      message: '请输入至少一条激活规则',
+      trigger: 'blur',
+    },
   ],
 }
 
 // 监听 app 变化，填充表单
 watch(() => props.app, (app) => {
   if (app) {
+    const rules = Array.isArray(app.activeRule) ? app.activeRule : [app.activeRule]
     form.value = {
       name: app.name,
       displayName: app.displayName,
       url: app.url,
       icon: app.icon || 'box',
       layout: app.layout,
-      activeRule: app.activeRule,
+      activeRule: rules,
       permissions: app.permissions ?? [],
       status: app.status,
       sort: app.sort,
     }
+    activeRuleStr.value = rules.join(', ')
   } else {
     form.value = { ...defaultForm }
+    activeRuleStr.value = ''
   }
 }, { immediate: true })
 
@@ -132,8 +152,13 @@ const iconOptions = [
       </el-form-item>
 
       <el-form-item label="激活规则" prop="activeRule">
-        <el-input v-model="formData.activeRule" placeholder="/schema-platform/app/editor" />
-        <div :class="$style.fieldHint">qiankun 路由匹配规则</div>
+        <el-input
+          v-model="activeRuleStr"
+          type="textarea"
+          :autosize="{ minRows: 1, maxRows: 4 }"
+          placeholder="/schema-platform/app/editor, /schema-platform/standalone/editor"
+        />
+        <div :class="$style.fieldHint">qiankun 路由匹配规则，多条用逗号分隔</div>
       </el-form-item>
 
       <el-form-item label="图标" prop="icon">

@@ -16,6 +16,30 @@ import { createSubAppProps, type SubAppProps } from '@/composables/useSubAppProp
 
 const BASE_PATH = APP_CONFIGS.shell.basePath  // '/schema-platform/'
 
+// ── activeRule 构建 ──
+
+/**
+ * 将 activeRule 配置转为 qiankun 需要的函数。
+ * - string：精确匹配路径前缀
+ * - string[]：任一匹配即激活
+ * - 未提供：默认匹配 /app/{name} 和 /standalone/{name}
+ */
+function buildActiveRule(
+  name: string,
+  activeRule?: string | string[],
+): (location: Location) => boolean {
+  if (activeRule) {
+    const rules = Array.isArray(activeRule) ? activeRule : [activeRule]
+    return (location: Location) => rules.some(r => location.pathname.startsWith(r))
+  }
+  // 默认：同时匹配 /app/name 和 /standalone/name
+  return (location: Location) => {
+    const p = location.pathname
+    return p.startsWith(`${BASE_PATH}app/${name}`) ||
+           p.startsWith(`${BASE_PATH}standalone/${name}`)
+  }
+}
+
 // ── 全局状态 actions（由 main.ts 注入） ──
 
 let globalStateActions: {
@@ -32,8 +56,8 @@ export function setGlobalStateActions(actions: typeof globalStateActions): void 
 export interface BuiltinAppConfig {
   /** qiankun 应用标识 */
   name: string
-  /** 本地开发端口 */
-  devPort: number
+  /** 环境变量名（VITE_XXX_ENTRY） */
+  envKey: string
   /** 生产环境 entry 路径（相对于 BASE_PATH） */
   prodPath: string
 }
@@ -41,17 +65,17 @@ export interface BuiltinAppConfig {
 export const BUILTIN_APPS: BuiltinAppConfig[] = [
   {
     name: 'editor',
-    devPort: 5100,
+    envKey: 'VITE_EDITOR_ENTRY',
     prodPath: 'child/editor/',
   },
   {
     name: 'flow',
-    devPort: 5200,
+    envKey: 'VITE_FLOW_ENTRY',
     prodPath: 'child/flow/',
   },
   {
     name: 'ai',
-    devPort: 5300,
+    envKey: 'VITE_AI_ENTRY',
     prodPath: 'child/ai/',
   },
 ]
@@ -83,7 +107,7 @@ export const useMicroAppStore = defineStore('microApp', () => {
           url: getBuiltinEntry(b),
           icon: 'box',
           layout: 'without-menu',
-          activeRule: `${BASE_PATH}${b.name}`,
+          activeRule: [`${BASE_PATH}app/${b.name}`, `${BASE_PATH}standalone/${b.name}`],
           permissions: [],
           status: 'active',
           sort: 100,
@@ -91,7 +115,9 @@ export const useMicroAppStore = defineStore('microApp', () => {
       }
     }
 
-    return Array.from(merged.values()).sort((a, b) => a.sort - b.sort)
+    const result = Array.from(merged.values()).sort((a, b) => a.sort - b.sort)
+    console.log(`[microApp] allApps computed: ${result.length} apps (server=${apps.value.length}, builtin=${BUILTIN_APPS.length})`)
+    return result
   })
 
   /** with-menu 布局的子应用 */
@@ -99,16 +125,27 @@ export const useMicroAppStore = defineStore('microApp', () => {
     allApps.value.filter(a => a.layout === 'with-menu'),
   )
 
-  /** standalone 布局的子应用 */
+  /** without-menu 布局的子应用 */
   const standaloneApps = computed(() =>
     allApps.value.filter(a => a.layout === 'without-menu'),
   )
 
   function getBuiltinEntry(b: BuiltinAppConfig): string {
+    const entry = import.meta.env.DEV
+      ? (import.meta.env[b.envKey] as string || `http://localhost:3000/`)
+      : `${window.location.origin}${BASE_PATH}${b.prodPath}`
+    console.log(`[microApp] getBuiltinEntry: ${b.name} → ${entry}`)
+    return entry
+  }
+
+  /** 服务端应用 entry：开发环境优先读 VITE_{NAME}_ENTRY 环境变量 */
+  function getServerAppEntry(app: MicroAppConfig): string {
     if (import.meta.env.DEV) {
-      return `http://localhost:${b.devPort}/`
+      const envKey = `VITE_${app.name.toUpperCase()}_ENTRY`
+      const envVal = import.meta.env[envKey] as string | undefined
+      if (envVal) return envVal
     }
-    return `${window.location.origin}${BASE_PATH}${b.prodPath}`
+    return app.url
   }
 
   /** 构建子应用 props（统一通信契约） */
@@ -116,34 +153,40 @@ export const useMicroAppStore = defineStore('microApp', () => {
     if (!globalStateActions) {
       throw new Error('[microApp] globalStateActions not injected. Call setGlobalStateActions() in main.ts first.')
     }
-    return createSubAppProps(appName, globalStateActions)
+    const props = createSubAppProps(appName, globalStateActions)
+    console.log(`[microApp] buildProps: ${appName}, keys=${Object.keys(props)}`)
+    return props
   }
 
   /** 注册内置子应用到 qiankun（应用名与子应用 qiankun 插件一致） */
   function registerBuiltin(): void {
-    if (builtinRegistered.value) return
+    if (builtinRegistered.value) {
+      console.log('[microApp] registerBuiltin: already registered, skip')
+      return
+    }
+    console.log(`[microApp] registerBuiltin: registering ${BUILTIN_APPS.length} apps`)
 
     const registrations = BUILTIN_APPS.map(b => ({
       name: b.name,
       entry: getBuiltinEntry(b),
       container: '#micro-container',
-      activeRule: (location: Location) => {
-        const p = location.pathname
-        return p.startsWith(`${BASE_PATH}app/${b.name}`) ||
-               p.startsWith(`${BASE_PATH}standalone/${b.name}`)
-      },
+      activeRule: buildActiveRule(b.name),
       props: buildProps(b.name),
     }))
 
+    console.table(registrations.map(r => ({ name: r.name, entry: r.entry, container: r.container, propsKeys: Object.keys(r.props) })))
     registerMicroApps(registrations)
+    console.log(`[microApp] builtin registered: ${registrations.length} apps`)
     builtinRegistered.value = true
   }
 
   /** 从后端拉取配置并合并注册 */
   async function fetchApps(): Promise<void> {
+    console.log('[microApp] fetchApps: start')
     try {
       error.value = null
       const serverApps = await fetchActiveMicroApps()
+      console.log(`[microApp] fetchApps: server returned ${serverApps.length} apps`)
       apps.value = serverApps
       serverLoaded.value = true
 
@@ -153,26 +196,31 @@ export const useMicroAppStore = defineStore('microApp', () => {
       )
 
       if (newApps.length > 0) {
+        console.table(newApps.map(app => ({
+          name: app.name,
+          entry: getServerAppEntry(app),
+          layout: app.layout,
+          displayName: app.displayName,
+        })))
+        console.log(`[microApp] server registered: ${newApps.length} apps`)
         registerMicroApps(
           newApps.map(app => ({
             name: app.name,
-            entry: import.meta.env.DEV
-              ? `http://localhost:${DEV_PORT_MAP[app.name] || 3000}/`
-              : app.url,
+            entry: getServerAppEntry(app),
             container: '#micro-container',
-            activeRule: (location: Location) => {
-              const p = location.pathname
-              return p.startsWith(`${BASE_PATH}app/${app.name}`) ||
-                     p.startsWith(`${BASE_PATH}standalone/${app.name}`)
-            },
+            activeRule: buildActiveRule(app.name, app.activeRule),
             props: buildProps(app.name),
           })),
         )
       }
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : '加载子应用配置失败'
-      console.error('[shell] Failed to fetch micro-app configs:', err)
+      console.error('[microApp] fetchApps failed:', error.value, err)
     }
+
+    console.log(`[microApp] allApps total: ${allApps.value.length}`)
+    console.table(allApps.value.map(a => ({ name: a.name, displayName: a.displayName, layout: a.layout, status: a.status, sort: a.sort })))
+    console.log('[microApp] fetchApps: done')
   }
 
   function getApp(name: string): MicroAppConfig | undefined {
@@ -192,9 +240,3 @@ export const useMicroAppStore = defineStore('microApp', () => {
     getApp,
   }
 })
-
-const DEV_PORT_MAP: Record<string, number> = {
-  editor: 5100,
-  flow: 5200,
-  ai: 5300,
-}

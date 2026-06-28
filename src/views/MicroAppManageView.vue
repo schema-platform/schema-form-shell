@@ -143,7 +143,7 @@ const displayApps = computed(() => {
         url: '',
         icon: 'box',
         layout: 'without-menu',
-        activeRule: `/schema-platform/${b.name}`,
+        activeRule: [`/schema-platform/app/${b.name}`, `/schema-platform/standalone/${b.name}`],
         permissions: [],
         status: 'active',
         sort: 100,
@@ -242,19 +242,24 @@ onMounted(() => {
 
     <!-- 分页列表 -->
     <el-table :data="pagedApps" :class="$style.table" stripe>
-      <el-table-column label="应用" min-width="280">
+      <el-table-column label="图标" width="60" align="center">
         <template #default="{ row }">
-          <div :class="$style.appCell">
-            <AppIcon :name="row.icon || 'box'" :size="20" :class="$style.cellIcon" />
-            <div :class="$style.appCellInfo">
-              <div :class="$style.appCellName">
-                {{ row.displayName }}
-                <el-tag v-if="row.isBuiltin" type="success" size="small">内置</el-tag>
-                <el-tag v-else type="info" size="small">服务端</el-tag>
-              </div>
-              <div :class="$style.appCellId">{{ row.name }}</div>
-            </div>
-          </div>
+          <AppIcon :name="row.icon || 'box'" :size="20" :class="$style.cellIcon" />
+        </template>
+      </el-table-column>
+
+      <el-table-column label="应用名称" prop="displayName" min-width="140" />
+
+      <el-table-column label="应用标识" min-width="120">
+        <template #default="{ row }">
+          <span :class="$style.monoText">{{ row.name }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="来源" width="80" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="row.isBuiltin" type="success" size="small">内置</el-tag>
+          <el-tag v-else type="info" size="small">服务端</el-tag>
         </template>
       </el-table-column>
 
@@ -266,7 +271,7 @@ onMounted(() => {
 
       <el-table-column label="激活规则" min-width="240">
         <template #default="{ row }">
-          <span :class="$style.monoText">{{ row.activeRule }}</span>
+          <span :class="$style.monoText">{{ Array.isArray(row.activeRule) ? row.activeRule.join(', ') : row.activeRule }}</span>
         </template>
       </el-table-column>
 
@@ -429,34 +434,8 @@ onMounted(() => {
   width: 100%;
 }
 
-.appCell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .cellIcon {
   color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-.appCellInfo {
-  min-width: 0;
-}
-
-.appCellName {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-color-primary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.appCellId {
-  font-size: 12px;
-  color: var(--text-color-secondary);
-  font-family: monospace;
 }
 
 .monoText {

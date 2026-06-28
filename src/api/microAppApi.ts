@@ -13,7 +13,8 @@ export interface MicroAppConfig {
   url: string
   icon: string
   layout: 'with-menu' | 'without-menu'
-  activeRule: string
+  /** 激活规则：单路径或多路径 */
+  activeRule: string | string[]
   permissions: string[]
   status: 'active' | 'inactive'
   sort: number
@@ -25,7 +26,7 @@ export interface MicroAppFormData {
   url: string
   icon: string
   layout: 'with-menu' | 'without-menu'
-  activeRule: string
+  activeRule: string | string[]
   permissions: string[]
   status: 'active' | 'inactive'
   sort: number

@@ -1,10 +1,13 @@
 /**
- * ClassicSidebarLayout — 带菜单的微应用容器
+ * ClassicSidebarLayout — 带侧边菜单的统一布局
  *
- * 容器 ID: with-menu-container
+ * 根据路由自动切换 main 区域：
+ * - 有子路由（/、/admin/*）→ <router-view />
+ * - 子应用容器（/app/*）→ #micro-container + qiankun
  */
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@schema-form/business-shared/stores/layout'
 import SideMenu from '@/components/SideMenu.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
@@ -12,38 +15,33 @@ import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 import { Loading } from '@element-plus/icons-vue'
-import { ensureStarted } from '@/utils/qiankunStarted'
+import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
+const route = useRoute()
 const layoutStore = useLayoutStore()
 layoutStore.restoreCollapsed()
 
+const isMicroApp = computed(() => route.name === 'app')
 const loading = ref(true)
 
 function toggleCollapse() {
   layoutStore.toggleCollapse()
 }
 
-// 监听子应用挂载完成
-let observer: MutationObserver | null = null
+function handleSubAppMounted() {
+  console.log('[ClassicSidebarLayout] sub-app mounted via event')
+  loading.value = false
+}
 
 onMounted(() => {
-  ensureStarted()
-
-  // 通过 MutationObserver 检测 micro-container 内容变化
-  const container = document.getElementById('micro-container')
-  if (container) {
-    observer = new MutationObserver(() => {
-      if (container.children.length > 0) {
-        loading.value = false
-        observer?.disconnect()
-      }
-    })
-    observer.observe(container, { childList: true })
+  if (isMicroApp.value) {
+    console.log('[ClassicSidebarLayout] mounted as micro-app container')
+    onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
   }
 })
 
 onUnmounted(() => {
-  observer?.disconnect()
+  offShellEvent('shell:sub-app-mounted', handleSubAppMounted)
 })
 </script>
 
@@ -74,11 +72,16 @@ onUnmounted(() => {
       </header>
 
       <main :class="$style.main">
-        <div v-if="loading" :class="$style.loadingOverlay">
-          <el-icon :class="$style.loadingIcon" :size="32"><Loading /></el-icon>
-          <span>加载中...</span>
-        </div>
-        <div id="micro-container" :class="$style.container" />
+        <!-- 子应用容器 -->
+        <template v-if="isMicroApp">
+          <div v-if="loading" :class="$style.loadingOverlay">
+            <el-icon :class="$style.loadingIcon" :size="32"><Loading /></el-icon>
+            <span>加载中...</span>
+          </div>
+          <div id="micro-container" :class="$style.container" />
+        </template>
+        <!-- 普通页面 -->
+        <router-view v-else />
       </main>
     </div>
   </div>
@@ -166,5 +169,12 @@ onUnmounted(() => {
   .mobileMenuBtn {
     display: flex;
   }
+}
+</style>
+
+<!-- 全局：隐藏子应用 index.html 的 #loading -->
+<style>
+#micro-container #loading {
+  display: none !important;
 }
 </style>

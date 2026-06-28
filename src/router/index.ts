@@ -2,18 +2,18 @@
  * Shell router
  *
  * Route structure:
- * - /                         → MainLayout → HomeView (首页)
- * - /admin/micro-apps         → MainLayout → MicroAppManageView (微应用管理)
- * - /app/:pathMatch(.*)*      → ClassicSidebarLayout (带菜单的微应用容器)
- * - /standalone/:pathMatch(.*)* → StandaloneLayout (不带菜单的微应用容器)
  * - /login                    → LoginView (public)
  * - /sso/callback             → SSOCallbackView (public)
+ * - /                         → ClassicSidebarLayout → HomeView (首页)
+ * - /admin/micro-apps         → ClassicSidebarLayout → MicroAppManageView (管理页)
+ * - /app/:pathMatch(.*)*      → ClassicSidebarLayout + qiankun (带菜单的子应用容器)
+ * - /standalone/:pathMatch(.*)* → StandaloneLayout (不带菜单)
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 import { useAuthStore } from '@schema-platform/platform-shared/utils/stores/authStore'
 
-const PUBLIC_ROUTES = new Set(['/login', '/sso/callback'])
+const PUBLIC_ROUTE_NAMES = new Set(['login', 'sso-callback', 'app', 'standalone'])
 const base = APP_CONFIGS.shell.basePath
 
 const router = createRouter({
@@ -36,10 +36,10 @@ const router = createRouter({
       meta: { public: true },
     },
 
-    // ---- 带菜单布局的页面（首页 + 管理页） ----
+    // ---- 带菜单的页面（首页 + 管理页） ----
     {
       path: '/',
-      component: () => import('@/layouts/MainLayout.vue'),
+      component: () => import('@/layouts/ClassicSidebarLayout.vue'),
       children: [
         {
           path: '',
@@ -55,7 +55,7 @@ const router = createRouter({
       ],
     },
 
-    // ---- 带菜单的微应用容器 ----
+    // ---- 带菜单的微应用容器（独立路由） ----
     {
       path: '/app/:pathMatch(.*)*',
       name: 'app',
@@ -80,7 +80,7 @@ const router = createRouter({
 // Global navigation guard
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
-  const isPublic = to.meta?.public === true || PUBLIC_ROUTES.has(to.path)
+  const isPublic = to.meta?.public === true || PUBLIC_ROUTE_NAMES.has(to.name as string)
 
   if (!authStore.accessToken) {
     if (isPublic) { next() } else { next({ path: '/login', query: { redirect: to.fullPath } }) }

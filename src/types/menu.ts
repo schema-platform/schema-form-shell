@@ -24,7 +24,7 @@ export interface MenuTreeNode {
   url: string
   /** 所属应用：shell=主应用, admin=系统管理, 空=通用 */
   app: string
-  /** 容器布局：with-menu=带菜单容器, without-menu=独立全屏 */
+  /** 容器布局：with-menu=带菜单容器(ClassicSidebarLayout), without-menu=独立全屏(StandaloneLayout) */
   layout: 'with-menu' | 'without-menu'
   children: MenuTreeNode[]
 }
