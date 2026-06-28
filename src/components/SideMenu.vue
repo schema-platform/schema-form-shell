@@ -12,6 +12,22 @@ import { resolveIconName } from '@schema-platform/platform-shared/utils/iconReso
 import type { MenuTreeNode } from '@/types/menu'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
+/** 数据库中的图标名 → ICON_MAP 中实际存在的 kebab-case 名称 */
+const ICON_FIX: Record<string, string> = {
+  editpen: 'edit',
+  editpenicon: 'edit',
+  homefilled: 'home-filled',
+  userfilled: 'user-filled',
+  infofilled: 'info-filled',
+  successfilled: 'success-filled',
+  circlecheckfilled: 'circle-check-filled',
+  circleclosefilled: 'circle-close-filled',
+  questionfilled: 'question-filled',
+  picturefilled: 'picture-filled',
+  morefilled: 'more-filled',
+  chatdotround: 'chat-dot-round',
+}
+
 defineProps<{
   collapsed: boolean
 }>()
@@ -27,6 +43,9 @@ const { menuTree, loading: menuLoading, error: menuError, fetchMenus } = useMenu
 fetchMenus()
 
 function resolveIcon(name?: string): string {
+  if (!name) return 'document'
+  const fixed = ICON_FIX[name.toLowerCase()]
+  if (fixed) return fixed
   return resolveIconName(name)
 }
 
@@ -131,6 +150,7 @@ defineExpose({ resetMenu: () => {} })
       :default-active="activeIndex"
       :collapse="collapsed"
       :collapse-transition="false"
+      class="shell-side-menu"
       :class="$style.menuNav"
       @select="handleSelect"
     >
@@ -232,29 +252,6 @@ defineExpose({ resetMenu: () => {} })
   border-right: none;
 }
 
-/* icon 固定大小 + icon 和文案间距 */
-.menuNav :deep(.el-menu-item),
-.menuNav :deep(.el-sub-menu__title) {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  line-height: 1;
-}
-
-.menuNav :deep(.el-menu-item .AppIcon),
-.menuNav :deep(.el-sub-menu__title .AppIcon),
-.menuNav :deep(.el-menu-item svg),
-.menuNav :deep(.el-sub-menu__title svg) {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.menuNav :deep(.el-menu-item span),
-.menuNav :deep(.el-sub-menu__title span) {
-  line-height: 1;
-}
-
 .menuNav::-webkit-scrollbar {
   width: 4px;
 }
@@ -307,5 +304,20 @@ defineExpose({ resetMenu: () => {} })
 .collapseText {
   font-size: 12px;
   white-space: nowrap;
+}
+</style>
+
+<!-- EP 菜单覆盖：用 scoped + :deep 确保穿透到 EP 内部元素 -->
+<style scoped>
+.shell-side-menu :deep(.el-menu-item),
+.shell-side-menu :deep(.el-sub-menu__title) {
+  gap: 10px !important;
+}
+
+.shell-side-menu :deep(.el-menu-item svg),
+.shell-side-menu :deep(.el-sub-menu__title svg) {
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0;
 }
 </style>

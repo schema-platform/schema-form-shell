@@ -129,6 +129,7 @@ onUnmounted(() => {
 
 .main {
   flex: 1;
+  position: relative;
   overflow: hidden;
   background: var(--bg-color-page);
 }

@@ -280,7 +280,7 @@ onMounted(() => {
 
       <el-table-column label="排序" width="70" align="center" prop="sort" />
 
-      <el-table-column label="操作" width="150" align="right" fixed="right">
+      <el-table-column label="操作" width="150" align="center" fixed="right">
         <template #default="{ row }">
           <el-button
             type="primary"

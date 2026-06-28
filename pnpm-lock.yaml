@@ -21,8 +21,8 @@ importers:
         specifier: file:./business-shared
         version: file:business-shared(typescript@5.7.3)
       '@schema-platform/platform-shared':
-        specifier: ^1.0.8
-        version: 1.0.8(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
+        specifier: ^1.0.9
+        version: 1.0.9(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -486,8 +486,8 @@ packages:
   '@schema-form/business-shared@file:business-shared':
     resolution: {directory: business-shared, type: directory}
 
-  '@schema-platform/platform-shared@1.0.8':
-    resolution: {integrity: sha512-HR0VCmxsUKrp8v8wQtuKErco4IMx0S9v6Ev22Uy5sy7N65RAi8We2PtIaNeyo+w8fJUXuFtNJzaZBmkIRJ4SIQ==, tarball: https://npm.pkg.github.com/download/@schema-platform/platform-shared/1.0.8/55d0adc36b70c22c67165ad7ece24687e0700d35}
+  '@schema-platform/platform-shared@1.0.9':
+    resolution: {integrity: sha512-ppXCVo23rCRGAohFBEKeuX7ZwYsycUQRcPFCkFwklohe5cVtJlH7W7Ntm0t0ucJ/4Ranc6WFY7IzgAfZAD/N/w==, tarball: https://npm.pkg.github.com/download/@schema-platform/platform-shared/1.0.9/9f8928668196ad54d45d70f5df3c447bbe280432}
     peerDependencies:
       element-plus: ^2.9.1
       vue: ^3.5.13
@@ -1359,7 +1359,7 @@ snapshots:
 
   '@schema-form/business-shared@file:business-shared(typescript@5.7.3)':
     dependencies:
-      '@schema-platform/platform-shared': 1.0.8(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
+      '@schema-platform/platform-shared': 1.0.9(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       element-plus: 2.14.2(vue@3.5.39(typescript@5.7.3))
       pinia: 2.3.1(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))
       vue: 3.5.39(typescript@5.7.3)
@@ -1372,7 +1372,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@schema-platform/platform-shared@1.0.8(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))':
+  '@schema-platform/platform-shared@1.0.9(element-plus@2.14.2(vue@3.5.39(typescript@5.7.3)))(typescript@5.7.3)(vue@3.5.39(typescript@5.7.3))':
     dependencies:
       '@element-plus/icons-vue': 2.3.2(vue@3.5.39(typescript@5.7.3))
       '@iconify-icons/ep': 1.2.12

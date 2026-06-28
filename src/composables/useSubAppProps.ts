@@ -49,6 +49,8 @@ function offShellEvent(event: string, handler: EventHandler): void {
 export interface SubAppProps {
   /** 认证令牌 */
   token: string
+  /** 动态获取认证令牌（子应用 mount 时调用，确保获取最新值） */
+  getToken: () => string
   /** 动态前缀地址回调 */
   getRouteBase: () => string
   /** 监听 qiankun 全局状态变化 */
@@ -95,6 +97,7 @@ export function createSubAppProps(
 
   return {
     token: authStore.accessToken ?? '',
+    getToken: () => authStore.accessToken ?? '',
 
     getRouteBase() {
       const p = window.location.pathname

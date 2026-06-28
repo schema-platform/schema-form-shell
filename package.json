@@ -13,7 +13,7 @@
     "@iconify-icons/ep": "^1.2.12",
     "@iconify/vue": "^5.0.1",
     "@schema-form/business-shared": "file:./business-shared",
-    "@schema-platform/platform-shared": "^1.0.8",
+    "@schema-platform/platform-shared": "^1.0.9",
     "axios": "^1.18.1",
     "element-plus": "^2.9.7",
     "pinia": "^2.3.0",
