@@ -47,6 +47,7 @@
 - **禁止跳过问题**：遇到任何报错、警告、异常，必须找到根因并修复，不能以"预存问题""之前就有""不影响运行"为由跳过。每个问题都要记录原因和修复方式
 
 ### 项目隔离规则
+- **前端禁止修改 server 代码**：禁止修改 `schema-form-server/` 的任何代码。接口对接时，前端必须按照服务端已有的接口规范适配，优先修复前端问题，不能为了方便而去改服务端接口。
 - **shell 只能改 shell**：只允许修改 `schema-form-shell/` 目录下的文件。禁止修改 `schema-form-editor/`、`schema-form-flow/`、`schema-form-ai/`、`schema-form-server/`、`schema-form-platform-shared/`、`schema-form-flow-shared/` 等任何其他项目的代码。子应用的问题在子应用里修，不能从 shell 里改。
 
 ## 迭代规则
