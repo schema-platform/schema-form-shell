@@ -67,13 +67,19 @@ export const useMicroAppStore = defineStore('microApp', () => {
   /**
    * 构建 activeRule 函数
    *
-   * 服务端存储的 activeRule 是相对路径（如 /standalone/editor），
+   * 服务端 activeRule 可能是：
+   * - 数组: ['/standalone/editor', '/app/editor']
+   * - 逗号分隔字符串: '/standalone/editor,/app/editor'
+   * - 单个字符串: '/standalone/editor'
+   *
    * 需要加上 BASE_PATH 前缀才能匹配 location.pathname。
    */
   function buildActiveRule(
     activeRule: string | string[],
   ): (location: Location) => boolean {
-    const raw = Array.isArray(activeRule) ? activeRule : [activeRule]
+    const raw = Array.isArray(activeRule)
+      ? activeRule
+      : activeRule.split(',').map(s => s.trim()).filter(Boolean)
     const rules = raw.map(r => r.startsWith(BASE_PATH) ? r : `${BASE_PATH.replace(/\/$/, '')}${r}`)
     return (location: Location) => rules.some(r => location.pathname.startsWith(r))
   }
