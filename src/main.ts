@@ -68,7 +68,7 @@ async function restoreSession(): Promise<void> {
   }
 }
 
-// ── 子应用注册：内置立即注册 + 服务端拉取合并 ──
+// ── 子应用注册：服务端配置驱动 ──
 
 // 注入 globalState actions 到 microAppStore（用于子应用 props 下发）
 setGlobalStateActions({
@@ -82,10 +82,7 @@ setGlobalStateActions({
 
 const microAppStore = useMicroAppStore()
 
-// 1. 内置子应用立即注册（不依赖网络）
-microAppStore.registerBuiltin()
-
-// 2. 并行：恢复会话 + 拉取服务端配置
+// 并行：恢复会话 + 拉取服务端配置并注册
 // qiankun start() 由 ClassicSidebarLayout 在 #micro-container 就绪后调用
 Promise.all([
   restoreSession(),

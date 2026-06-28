@@ -16,6 +16,7 @@ import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 import { Loading } from '@element-plus/icons-vue'
+import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 import { start } from 'qiankun'
 import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
@@ -24,9 +25,18 @@ const layoutStore = useLayoutStore()
 const microAppStore = useMicroAppStore()
 layoutStore.restoreCollapsed()
 
-const isMicroApp = computed(() =>
-  microAppStore.allApps.some(app => route.path.includes(`/app/${app.name}`)),
-)
+const BASE = APP_CONFIGS.shell.basePath
+
+const isMicroApp = computed(() => {
+  const p = location.pathname
+  return microAppStore.allApps.some(app => {
+    const rules = Array.isArray(app.activeRule) ? app.activeRule : [app.activeRule]
+    return rules.some(r => {
+      const full = r.startsWith('/') ? r : `${BASE.replace(/\/$/, '')}${r}`
+      return p.startsWith(full)
+    })
+  })
+})
 const loading = ref(true)
 
 function toggleCollapse() {

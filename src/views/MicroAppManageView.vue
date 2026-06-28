@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useMicroAppStore, BUILTIN_APPS } from '@/stores/microApp'
+import { useMicroAppStore } from '@/stores/microApp'
 import {
   fetchAllMicroApps,
   deleteMicroApp,
@@ -18,7 +18,6 @@ import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.
 import ConfirmDialog from '@schema-platform/platform-shared/components/common/ConfirmDialog.vue'
 
 const microAppStore = useMicroAppStore()
-const builtinNames = computed(() => new Set(BUILTIN_APPS.map(b => b.name)))
 
 // ── 编辑对话框 ──
 
@@ -82,8 +81,7 @@ async function refreshServer() {
   }
 }
 
-function handleToggleStatus(app: MicroAppConfig & { isBuiltin: boolean }) {
-  if (app.isBuiltin) return
+function handleToggleStatus(app: MicroAppConfig) {
   const newStatus = app.status === 'active' ? 'inactive' : 'active'
   const label = newStatus === 'active' ? '启用' : '停用'
 
@@ -99,12 +97,7 @@ function handleToggleStatus(app: MicroAppConfig & { isBuiltin: boolean }) {
   )
 }
 
-function handleDelete(app: MicroAppConfig & { isBuiltin: boolean }) {
-  if (app.isBuiltin) {
-    ElMessage.warning('内置应用不可删除')
-    return
-  }
-
+function handleDelete(app: MicroAppConfig) {
   openConfirm(
     '确认删除',
     `确定要删除「${app.displayName}」吗？此操作不可恢复。`,
@@ -117,7 +110,7 @@ function handleDelete(app: MicroAppConfig & { isBuiltin: boolean }) {
   )
 }
 
-function openApp(app: MicroAppConfig & { isBuiltin?: boolean }) {
+function openApp(app: MicroAppConfig) {
   const prefix = app.layout === 'without-menu' ? 'standalone' : 'app'
   window.open(`/schema-platform/${prefix}/${app.name}/`, '_blank')
 }
@@ -126,34 +119,9 @@ function openApp(app: MicroAppConfig & { isBuiltin?: boolean }) {
 
 const serverApps = ref<MicroAppConfig[]>([])
 
-const displayApps = computed(() => {
-  const builtinNameSet = builtinNames.value
-  const merged = new Map<string, MicroAppConfig & { isBuiltin: boolean }>()
-
-  for (const s of serverApps.value) {
-    merged.set(s.name, { ...s, isBuiltin: builtinNameSet.has(s.name) })
-  }
-
-  for (const b of BUILTIN_APPS) {
-    if (!merged.has(b.name)) {
-      merged.set(b.name, {
-        id: `builtin-${b.name}`,
-        name: b.name,
-        displayName: b.name,
-        url: '',
-        icon: 'box',
-        layout: 'without-menu',
-        activeRule: [`/schema-platform/app/${b.name}`, `/schema-platform/standalone/${b.name}`],
-        permissions: [],
-        status: 'active',
-        sort: 100,
-        isBuiltin: true,
-      })
-    }
-  }
-
-  return Array.from(merged.values()).sort((a, b) => a.sort - b.sort)
-})
+const displayApps = computed(() =>
+  [...serverApps.value].sort((a, b) => a.sort - b.sort),
+)
 
 // ── 分页 ──
 
@@ -178,8 +146,6 @@ function handleSizeChange(size: number) {
 
 const stats = computed(() => ({
   total: displayApps.value.length,
-  builtin: BUILTIN_APPS.length,
-  server: serverApps.value.length,
   active: displayApps.value.filter(a => a.status === 'active').length,
 }))
 
@@ -195,7 +161,7 @@ onMounted(() => {
       <div :class="$style.headerLeft">
         <h1 :class="$style.title">微应用管理</h1>
         <p :class="$style.desc">
-          管理所有注册的子应用。内置应用启动即用，服务端应用支持动态增删改。
+          管理所有注册的子应用，支持动态增删改。
         </p>
       </div>
       <div :class="$style.headerActions">
@@ -215,14 +181,6 @@ onMounted(() => {
       <div :class="$style.statCard">
         <div :class="$style.statValue">{{ stats.total }}</div>
         <div :class="$style.statLabel">总子应用</div>
-      </div>
-      <div :class="$style.statCard">
-        <div :class="$style.statValue">{{ stats.builtin }}</div>
-        <div :class="$style.statLabel">内置应用</div>
-      </div>
-      <div :class="$style.statCard">
-        <div :class="$style.statValue">{{ stats.server }}</div>
-        <div :class="$style.statLabel">服务端配置</div>
       </div>
       <div :class="$style.statCard">
         <div :class="$style.statValue">{{ stats.active }}</div>
@@ -253,13 +211,6 @@ onMounted(() => {
       <el-table-column label="应用标识" min-width="120">
         <template #default="{ row }">
           <span :class="$style.monoText">{{ row.name }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="来源" width="80" align="center">
-        <template #default="{ row }">
-          <el-tag v-if="row.isBuiltin" type="success" size="small">内置</el-tag>
-          <el-tag v-else type="info" size="small">服务端</el-tag>
         </template>
       </el-table-column>
 
@@ -297,7 +248,6 @@ onMounted(() => {
             打开
           </el-button>
           <el-button
-            v-if="!row.isBuiltin"
             type="primary"
             text
             size="small"
@@ -306,7 +256,6 @@ onMounted(() => {
             编辑
           </el-button>
           <el-button
-            v-if="!row.isBuiltin"
             :type="row.status === 'active' ? 'warning' : 'success'"
             text
             size="small"
@@ -315,7 +264,6 @@ onMounted(() => {
             {{ row.status === 'active' ? '停用' : '启用' }}
           </el-button>
           <el-button
-            v-if="!row.isBuiltin"
             type="danger"
             text
             size="small"
