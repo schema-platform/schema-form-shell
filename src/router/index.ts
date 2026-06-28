@@ -36,19 +36,23 @@ const router = createRouter({
       meta: { public: true },
     },
 
-    // ---- 首页（带菜单布局） ----
+    // ---- 带菜单布局的页面（首页 + 管理页） ----
     {
       path: '/',
-      name: 'home',
       component: () => import('@/layouts/MainLayout.vue'),
-    },
-
-    // ---- 微应用管理（带菜单布局） ----
-    {
-      path: '/admin/micro-apps',
-      name: 'micro-app-manage',
-      component: () => import('@/layouts/MainLayout.vue'),
-      meta: { admin: true },
+      children: [
+        {
+          path: '',
+          name: 'home',
+          component: () => import('@/views/HomeView.vue'),
+        },
+        {
+          path: 'admin/micro-apps',
+          name: 'micro-app-manage',
+          component: () => import('@/views/MicroAppManageView.vue'),
+          meta: { admin: true },
+        },
+      ],
     },
 
     // ---- 带菜单的微应用容器 ----

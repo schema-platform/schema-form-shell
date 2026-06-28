@@ -134,12 +134,6 @@ defineExpose({ resetMenu: () => {} })
       :class="$style.menuNav"
       @select="handleSelect"
     >
-      <!-- 首页 -->
-      <el-menu-item index="/">
-        <AppIcon name="home-filled" :size="18" />
-        <template #title>首页</template>
-      </el-menu-item>
-
       <!-- 动态菜单树（完全来自服务器） -->
       <template v-for="node in menuTree" :key="node.id">
         <el-sub-menu
@@ -236,6 +230,29 @@ defineExpose({ resetMenu: () => {} })
   overflow-y: auto;
   overflow-x: hidden;
   border-right: none;
+}
+
+/* icon 固定大小 + icon 和文案间距 */
+.menuNav :deep(.el-menu-item),
+.menuNav :deep(.el-sub-menu__title) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1;
+}
+
+.menuNav :deep(.el-menu-item .AppIcon),
+.menuNav :deep(.el-sub-menu__title .AppIcon),
+.menuNav :deep(.el-menu-item svg),
+.menuNav :deep(.el-sub-menu__title svg) {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.menuNav :deep(.el-menu-item span),
+.menuNav :deep(.el-sub-menu__title span) {
+  line-height: 1;
 }
 
 .menuNav::-webkit-scrollbar {

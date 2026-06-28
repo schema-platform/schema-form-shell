@@ -1,22 +1,18 @@
 /**
  * MicroAppEditDialog — 子应用编辑/创建对话框
  *
- * 支持：
- * - 创建新子应用
- * - 编辑已有子应用配置
- * - 表单校验
+ * 基于 platform-shared 的 FormDialog 封装。
  */
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
+import type { FormRules } from 'element-plus'
 import { createMicroApp, updateMicroApp, type MicroAppConfig, type MicroAppFormData } from '@/api/microAppApi'
+import FormDialog from '@schema-platform/platform-shared/components/common/FormDialog.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const props = defineProps<{
-  /** 是否显示对话框 */
   visible: boolean
-  /** 编辑模式下的子应用数据，null 表示创建模式 */
   app: MicroAppConfig | null
 }>()
 
@@ -25,9 +21,7 @@ const emit = defineEmits<{
   saved: []
 }>()
 
-const formRef = ref<FormInstance>()
 const saving = ref(false)
-
 const isEdit = computed(() => !!props.app)
 
 const defaultForm: MicroAppFormData = {
@@ -35,7 +29,7 @@ const defaultForm: MicroAppFormData = {
   displayName: '',
   url: '',
   icon: 'box',
-  layout: 'with-menu',
+  layout: 'without-menu',
   activeRule: '',
   permissions: [],
   status: 'active',
@@ -58,9 +52,6 @@ const rules: FormRules = {
   activeRule: [
     { required: true, message: '请输入激活规则', trigger: 'blur' },
   ],
-  layout: [
-    { required: true, message: '请选择布局类型', trigger: 'change' },
-  ],
 }
 
 // 监听 app 变化，填充表单
@@ -82,21 +73,7 @@ watch(() => props.app, (app) => {
   }
 }, { immediate: true })
 
-// 监听 visible，打开时重置校验
-watch(() => props.visible, (val) => {
-  if (val) {
-    formRef.value?.clearValidate()
-  }
-})
-
-function handleClose() {
-  emit('update:visible', false)
-}
-
 async function handleSubmit() {
-  const valid = await formRef.value?.validate().catch(() => false)
-  if (!valid) return
-
   saving.value = true
   try {
     if (isEdit.value && props.app) {
@@ -107,7 +84,7 @@ async function handleSubmit() {
       ElMessage.success('创建成功')
     }
     emit('saved')
-    handleClose()
+    emit('update:visible', false)
   } catch (err: unknown) {
     ElMessage.error(err instanceof Error ? err.message : '操作失败')
   } finally {
@@ -123,23 +100,21 @@ const iconOptions = [
 </script>
 
 <template>
-  <el-dialog
+  <FormDialog
     :model-value="visible"
     :title="isEdit ? '编辑子应用' : '创建子应用'"
-    width="560px"
-    :close-on-click-modal="false"
-    @update:model-value="handleClose"
+    width="70%"
+    :loading="saving"
+    :form-data="form"
+    :rules="rules"
+    label-width="100px"
+    @update:model-value="emit('update:visible', $event)"
+    @submit="handleSubmit"
   >
-    <el-form
-      ref="formRef"
-      :model="form"
-      :rules="rules"
-      label-width="100px"
-      label-position="right"
-    >
+    <template #default="{ form: formData }">
       <el-form-item label="应用标识" prop="name">
         <el-input
-          v-model="form.name"
+          v-model="formData.name"
           placeholder="editor"
           :disabled="isEdit"
           maxlength="32"
@@ -148,16 +123,16 @@ const iconOptions = [
       </el-form-item>
 
       <el-form-item label="显示名称" prop="displayName">
-        <el-input v-model="form.displayName" placeholder="表单设计器" maxlength="50" />
+        <el-input v-model="formData.displayName" placeholder="表单设计器" maxlength="50" />
       </el-form-item>
 
       <el-form-item label="入口 URL" prop="url">
-        <el-input v-model="form.url" placeholder="http://localhost:5100/" />
+        <el-input v-model="formData.url" placeholder="http://localhost:5100/" />
         <div :class="$style.fieldHint">子应用的入口地址（生产环境完整 URL）</div>
       </el-form-item>
 
       <el-form-item label="激活规则" prop="activeRule">
-        <el-input v-model="form.activeRule" placeholder="/schema-platform/app/editor" />
+        <el-input v-model="formData.activeRule" placeholder="/schema-platform/app/editor" />
         <div :class="$style.fieldHint">qiankun 路由匹配规则</div>
       </el-form-item>
 
@@ -166,8 +141,8 @@ const iconOptions = [
           <div
             v-for="icon in iconOptions"
             :key="icon"
-            :class="[$style.iconOption, { [$style.iconActive]: form.icon === icon }]"
-            @click="form.icon = icon"
+            :class="[$style.iconOption, { [$style.iconActive]: formData.icon === icon }]"
+            @click="formData.icon = icon"
           >
             <AppIcon :name="icon" :size="20" />
           </div>
@@ -175,7 +150,7 @@ const iconOptions = [
       </el-form-item>
 
       <el-form-item label="布局类型" prop="layout">
-        <el-radio-group v-model="form.layout">
+        <el-radio-group v-model="formData.layout">
           <el-radio value="with-menu">带菜单</el-radio>
           <el-radio value="without-menu">独立全屏</el-radio>
         </el-radio-group>
@@ -183,7 +158,7 @@ const iconOptions = [
 
       <el-form-item label="状态" prop="status">
         <el-switch
-          v-model="form.status"
+          v-model="formData.status"
           active-value="active"
           inactive-value="inactive"
           active-text="启用"
@@ -192,17 +167,10 @@ const iconOptions = [
       </el-form-item>
 
       <el-form-item label="排序" prop="sort">
-        <el-input-number v-model="form.sort" :min="0" :max="9999" :step="10" />
+        <el-input-number v-model="formData.sort" :min="0" :max="9999" :step="10" />
       </el-form-item>
-    </el-form>
-
-    <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="saving" @click="handleSubmit">
-        {{ isEdit ? '保存' : '创建' }}
-      </el-button>
     </template>
-  </el-dialog>
+  </FormDialog>
 </template>
 
 <style module>

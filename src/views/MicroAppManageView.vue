@@ -1,16 +1,11 @@
 /**
  * MicroAppManageView — 微前端子应用管理界面
  *
- * 功能：
- * - 查看所有子应用（内置 + 服务端）
- * - 创建 / 编辑 / 删除子应用
- * - 启用 / 停用子应用
- * - 刷新服务端配置
- * - 快速跳转到子应用
+ * 分页列表展示，支持 CRUD、启停用、跳转
  */
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useMicroAppStore, BUILTIN_APPS } from '@/stores/microApp'
 import {
   fetchAllMicroApps,
@@ -20,9 +15,9 @@ import {
 } from '@/api/microAppApi'
 import MicroAppEditDialog from '@/components/MicroAppEditDialog.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
+import ConfirmDialog from '@schema-platform/platform-shared/components/common/ConfirmDialog.vue'
 
 const microAppStore = useMicroAppStore()
-
 const builtinNames = computed(() => new Set(BUILTIN_APPS.map(b => b.name)))
 
 // ── 编辑对话框 ──
@@ -44,12 +39,42 @@ function handleSaved() {
   refreshServer()
 }
 
+// ── 确认对话框 ──
+
+const confirmVisible = ref(false)
+const confirmLoading = ref(false)
+const confirmTitle = ref('')
+const confirmMessage = ref('')
+const confirmType = ref<'warning' | 'danger'>('warning')
+let confirmAction: (() => Promise<void>) | null = null
+
+function openConfirm(title: string, message: string, type: 'warning' | 'danger', action: () => Promise<void>) {
+  confirmTitle.value = title
+  confirmMessage.value = message
+  confirmType.value = type
+  confirmAction = action
+  confirmVisible.value = true
+}
+
+async function handleConfirm() {
+  if (!confirmAction) return
+  confirmLoading.value = true
+  try {
+    await confirmAction()
+    confirmVisible.value = false
+  } catch (err: unknown) {
+    ElMessage.error(err instanceof Error ? err.message : '操作失败')
+  } finally {
+    confirmLoading.value = false
+    confirmAction = null
+  }
+}
+
 // ── CRUD 操作 ──
 
 async function refreshServer() {
   try {
     await microAppStore.fetchApps()
-    // 同时拉取全量（含停用）用于管理页展示
     const allApps = await fetchAllMicroApps()
     serverApps.value = allApps
   } catch {
@@ -57,80 +82,97 @@ async function refreshServer() {
   }
 }
 
-async function handleToggleStatus(app: MicroAppConfig) {
+function handleToggleStatus(app: MicroAppConfig & { isBuiltin: boolean }) {
+  if (app.isBuiltin) return
   const newStatus = app.status === 'active' ? 'inactive' : 'active'
   const label = newStatus === 'active' ? '启用' : '停用'
 
-  try {
-    await ElMessageBox.confirm(
-      `确定要${label}「${app.displayName}」吗？`,
-      '确认操作',
-      { type: 'warning' },
-    )
-    await toggleMicroAppStatus(app.id, newStatus)
-    ElMessage.success(`已${label}`)
-    await refreshServer()
-  } catch {
-    // 用户取消或操作失败
-  }
+  openConfirm(
+    '确认操作',
+    `确定要${label}「${app.displayName}」吗？`,
+    'warning',
+    async () => {
+      await toggleMicroAppStatus(app.id, newStatus)
+      ElMessage.success(`已${label}`)
+      await refreshServer()
+    },
+  )
 }
 
-async function handleDelete(app: MicroAppConfig) {
-  if (builtinNames.value.has(app.name)) {
+function handleDelete(app: MicroAppConfig & { isBuiltin: boolean }) {
+  if (app.isBuiltin) {
     ElMessage.warning('内置应用不可删除')
     return
   }
 
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除「${app.displayName}」吗？此操作不可恢复。`,
-      '确认删除',
-      { type: 'error', confirmButtonText: '删除', confirmButtonClass: 'el-button--danger' },
-    )
-    await deleteMicroApp(app.id)
-    ElMessage.success('已删除')
-    await refreshServer()
-  } catch {
-    // 用户取消或操作失败
-  }
+  openConfirm(
+    '确认删除',
+    `确定要删除「${app.displayName}」吗？此操作不可恢复。`,
+    'danger',
+    async () => {
+      await deleteMicroApp(app.id)
+      ElMessage.success('已删除')
+      await refreshServer()
+    },
+  )
 }
 
-function openApp(name: string) {
-  window.open(`/schema-platform/app/${name}/`, '_blank')
+function openApp(app: MicroAppConfig & { isBuiltin?: boolean }) {
+  const prefix = app.layout === 'without-menu' ? 'standalone' : 'app'
+  window.open(`/schema-platform/${prefix}/${app.name}/`, '_blank')
 }
 
-// ── 服务端应用列表（含停用） ──
+// ── 数据源 ──
 
 const serverApps = ref<MicroAppConfig[]>([])
 
-/** 合并展示列表：内置 + 服务端（去重） */
 const displayApps = computed(() => {
+  const builtinNameSet = builtinNames.value
   const merged = new Map<string, MicroAppConfig & { isBuiltin: boolean }>()
 
-  // 内置
-  for (const b of BUILTIN_APPS) {
-    merged.set(b.name, {
-      id: `builtin-${b.name}`,
-      name: b.name,
-      displayName: b.displayName,
-      url: '',
-      icon: b.icon,
-      layout: b.layout,
-      activeRule: b.activeRule,
-      permissions: [],
-      status: 'active',
-      sort: b.sort,
-      isBuiltin: true,
-    })
+  for (const s of serverApps.value) {
+    merged.set(s.name, { ...s, isBuiltin: builtinNameSet.has(s.name) })
   }
 
-  // 服务端覆盖
-  for (const s of serverApps.value) {
-    merged.set(s.name, { ...s, isBuiltin: builtinNames.value.has(s.name) })
+  for (const b of BUILTIN_APPS) {
+    if (!merged.has(b.name)) {
+      merged.set(b.name, {
+        id: `builtin-${b.name}`,
+        name: b.name,
+        displayName: b.name,
+        url: '',
+        icon: 'box',
+        layout: 'without-menu',
+        activeRule: `/schema-platform/${b.name}`,
+        permissions: [],
+        status: 'active',
+        sort: 100,
+        isBuiltin: true,
+      })
+    }
   }
 
   return Array.from(merged.values()).sort((a, b) => a.sort - b.sort)
 })
+
+// ── 分页 ──
+
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+const pagedApps = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return displayApps.value.slice(start, start + pageSize.value)
+})
+
+function handlePageChange(page: number) {
+  currentPage.value = page
+}
+
+function handleSizeChange(size: number) {
+  pageSize.value = size
+  currentPage.value = 1
+}
 
 // ── 统计 ──
 
@@ -139,7 +181,6 @@ const stats = computed(() => ({
   builtin: BUILTIN_APPS.length,
   server: serverApps.value.length,
   active: displayApps.value.filter(a => a.status === 'active').length,
-  inactive: displayApps.value.filter(a => a.status === 'inactive').length,
 }))
 
 onMounted(() => {
@@ -199,101 +240,99 @@ onMounted(() => {
       :class="$style.alert"
     />
 
-    <!-- 子应用列表 -->
-    <div :class="$style.appGrid">
-      <div
-        v-for="app in displayApps"
-        :key="app.name"
-        :class="[$style.appCard, { [$style.appInactive]: app.status === 'inactive' }]"
-      >
-        <div :class="$style.appHeader">
-          <div :class="$style.appIcon">
-            <AppIcon :name="app.icon || 'box'" :size="28" />
-          </div>
-          <div :class="$style.appInfo">
-            <div :class="$style.appName">
-              {{ app.displayName }}
-              <el-tag
-                v-if="(app as any).isBuiltin"
-                type="success"
-                size="small"
-                :class="$style.tag"
-              >
-                内置
-              </el-tag>
-              <el-tag
-                v-else
-                type="info"
-                size="small"
-                :class="$style.tag"
-              >
-                服务端
-              </el-tag>
+    <!-- 分页列表 -->
+    <el-table :data="pagedApps" :class="$style.table" stripe>
+      <el-table-column label="应用" min-width="280">
+        <template #default="{ row }">
+          <div :class="$style.appCell">
+            <AppIcon :name="row.icon || 'box'" :size="20" :class="$style.cellIcon" />
+            <div :class="$style.appCellInfo">
+              <div :class="$style.appCellName">
+                {{ row.displayName }}
+                <el-tag v-if="row.isBuiltin" type="success" size="small">内置</el-tag>
+                <el-tag v-else type="info" size="small">服务端</el-tag>
+              </div>
+              <div :class="$style.appCellId">{{ row.name }}</div>
             </div>
-            <div :class="$style.appId">{{ app.name }}</div>
           </div>
-          <el-tag
-            :type="app.status === 'active' ? 'success' : 'danger'"
-            size="small"
-          >
-            {{ app.status === 'active' ? '启用' : '停用' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column label="布局" width="100">
+        <template #default="{ row }">
+          {{ row.layout === 'with-menu' ? '带菜单' : '独立全屏' }}
+        </template>
+      </el-table-column>
+
+      <el-table-column label="激活规则" min-width="240">
+        <template #default="{ row }">
+          <span :class="$style.monoText">{{ row.activeRule }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="状态" width="80" align="center">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+            {{ row.status === 'active' ? '启用' : '停用' }}
           </el-tag>
-        </div>
+        </template>
+      </el-table-column>
 
-        <div :class="$style.appMeta">
-          <div :class="$style.metaRow">
-            <span :class="$style.metaLabel">布局</span>
-            <span>{{ app.layout === 'with-menu' ? '带菜单' : '独立全屏' }}</span>
-          </div>
-          <div :class="$style.metaRow">
-            <span :class="$style.metaLabel">激活规则</span>
-            <span :class="$style.monoText">{{ app.activeRule }}</span>
-          </div>
-          <div :class="$style.metaRow">
-            <span :class="$style.metaLabel">排序</span>
-            <span>{{ app.sort }}</span>
-          </div>
-        </div>
+      <el-table-column label="排序" width="70" align="center" prop="sort" />
 
-        <div :class="$style.appActions">
+      <el-table-column label="操作" width="150" align="right" fixed="right">
+        <template #default="{ row }">
           <el-button
             type="primary"
             text
             size="small"
-            :disabled="app.status !== 'active'"
-            @click="openApp(app.name)"
+            :disabled="row.status !== 'active'"
+            @click="openApp(row)"
           >
             打开
           </el-button>
           <el-button
-            v-if="!(app as any).isBuiltin"
+            v-if="!row.isBuiltin"
             type="primary"
             text
             size="small"
-            @click="openEdit(app)"
+            @click="openEdit(row)"
           >
             编辑
           </el-button>
           <el-button
-            v-if="!(app as any).isBuiltin"
-            :type="app.status === 'active' ? 'warning' : 'success'"
+            v-if="!row.isBuiltin"
+            :type="row.status === 'active' ? 'warning' : 'success'"
             text
             size="small"
-            @click="handleToggleStatus(app)"
+            @click="handleToggleStatus(row)"
           >
-            {{ app.status === 'active' ? '停用' : '启用' }}
+            {{ row.status === 'active' ? '停用' : '启用' }}
           </el-button>
           <el-button
-            v-if="!(app as any).isBuiltin"
+            v-if="!row.isBuiltin"
             type="danger"
             text
             size="small"
-            @click="handleDelete(app)"
+            @click="handleDelete(row)"
           >
             删除
           </el-button>
-        </div>
-      </div>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分页 -->
+    <div :class="$style.pagination">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="displayApps.length"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @current-change="handlePageChange"
+        @size-change="handleSizeChange"
+      />
     </div>
 
     <!-- 编辑对话框 -->
@@ -301,6 +340,16 @@ onMounted(() => {
       v-model:visible="dialogVisible"
       :app="editingApp"
       @saved="handleSaved"
+    />
+
+    <!-- 确认对话框 -->
+    <ConfirmDialog
+      v-model:model-value="confirmVisible"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      :type="confirmType"
+      :loading="confirmLoading"
+      @confirm="handleConfirm"
     />
   </div>
 </template>
@@ -376,107 +425,49 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-.appGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 16px;
+.table {
+  width: 100%;
 }
 
-.appCard {
-  background: var(--bg-color-white);
-  border: 1px solid var(--border-color-light);
-  border-radius: 12px;
-  padding: 20px;
-  transition: box-shadow 0.2s ease;
-}
-
-.appCard:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.appInactive {
-  opacity: 0.65;
-}
-
-.appHeader {
+.appCell {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
 }
 
-.appIcon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: var(--el-fill-color-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.cellIcon {
   color: var(--color-primary);
   flex-shrink: 0;
 }
 
-.appInfo {
-  flex: 1;
+.appCellInfo {
   min-width: 0;
 }
 
-.appName {
-  font-size: 16px;
-  font-weight: 600;
+.appCellName {
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-color-primary);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
-.tag {
-  flex-shrink: 0;
-}
-
-.appId {
+.appCellId {
   font-size: 12px;
   color: var(--text-color-secondary);
   font-family: monospace;
-  margin-top: 2px;
-}
-
-.appMeta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px;
-  background: var(--el-fill-color-lighter);
-  border-radius: 8px;
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 13px;
-}
-
-.metaLabel {
-  color: var(--text-color-secondary);
 }
 
 .monoText {
   font-family: monospace;
   font-size: 12px;
   color: var(--text-color-regular);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
 }
 
-.appActions {
+.pagination {
   display: flex;
   justify-content: flex-end;
-  gap: 4px;
-  flex-wrap: wrap;
+  margin-top: 16px;
 }
 </style>
