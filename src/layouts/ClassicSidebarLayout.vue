@@ -1,27 +1,32 @@
 /**
  * ClassicSidebarLayout — 带侧边菜单的统一布局
  *
- * 根据路由自动切换 main 区域：
- * - 有子路由（/、/admin/*）→ <router-view />
- * - 子应用容器（/app/*）→ #micro-container + qiankun
+ * #micro-container 始终存在于 DOM（qiankun 需要），通过 CSS 显隐切换。
+ * - 子应用路由（/app/*）→ 显示 #micro-container
+ * - 其他路由 → 显示 <router-view />
  */
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@schema-form/business-shared/stores/layout'
+import { useMicroAppStore } from '@/stores/microApp'
 import SideMenu from '@/components/SideMenu.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 import { Loading } from '@element-plus/icons-vue'
+import { start } from 'qiankun'
 import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const route = useRoute()
 const layoutStore = useLayoutStore()
+const microAppStore = useMicroAppStore()
 layoutStore.restoreCollapsed()
 
-const isMicroApp = computed(() => route.name === 'app')
+const isMicroApp = computed(() =>
+  microAppStore.allApps.some(app => route.path.includes(`/app/${app.name}`)),
+)
 const loading = ref(true)
 
 function toggleCollapse() {
@@ -34,9 +39,11 @@ function handleSubAppMounted() {
 }
 
 onMounted(() => {
-  if (isMicroApp.value) {
-    console.log('[ClassicSidebarLayout] mounted as micro-app container')
-    onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  console.log('[ClassicSidebarLayout] mounted')
+  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  if (!(window as any).__qiankun_started__) {
+    (window as any).__qiankun_started__ = true
+    start({ sandbox: false })
   }
 })
 
@@ -72,16 +79,16 @@ onUnmounted(() => {
       </header>
 
       <main :class="$style.main">
-        <!-- 子应用容器 -->
-        <template v-if="isMicroApp">
+        <!-- 普通页面 -->
+        <router-view v-show="!isMicroApp" />
+        <!-- 子应用容器（始终存在于 DOM，qiankun 需要） -->
+        <div v-show="isMicroApp" :class="$style.microWrapper">
           <div v-if="loading" :class="$style.loadingOverlay">
             <el-icon :class="$style.loadingIcon" :size="32"><Loading /></el-icon>
             <span>加载中...</span>
           </div>
           <div id="micro-container" :class="$style.container" />
-        </template>
-        <!-- 普通页面 -->
-        <router-view v-else />
+        </div>
       </main>
     </div>
   </div>
@@ -135,6 +142,11 @@ onUnmounted(() => {
   position: relative;
   overflow: hidden;
   background: var(--bg-color-page);
+}
+
+.microWrapper {
+  position: absolute;
+  inset: 0;
 }
 
 .container {

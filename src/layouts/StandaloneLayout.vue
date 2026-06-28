@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
+import { start } from 'qiankun'
 import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const loading = ref(true)
@@ -18,6 +19,10 @@ function handleSubAppMounted() {
 onMounted(() => {
   console.log('[StandaloneLayout] mounted')
   onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  if (!(window as any).__qiankun_started__) {
+    (window as any).__qiankun_started__ = true
+    start({ sandbox: false })
+  }
 })
 
 onUnmounted(() => {

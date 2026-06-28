@@ -56,28 +56,14 @@ export function setGlobalStateActions(actions: typeof globalStateActions): void 
 export interface BuiltinAppConfig {
   /** qiankun 应用标识 */
   name: string
-  /** 环境变量名（VITE_XXX_ENTRY） */
-  envKey: string
   /** 生产环境 entry 路径（相对于 BASE_PATH） */
   prodPath: string
 }
 
 export const BUILTIN_APPS: BuiltinAppConfig[] = [
-  {
-    name: 'editor',
-    envKey: 'VITE_EDITOR_ENTRY',
-    prodPath: 'child/editor/',
-  },
-  {
-    name: 'flow',
-    envKey: 'VITE_FLOW_ENTRY',
-    prodPath: 'child/flow/',
-  },
-  {
-    name: 'ai',
-    envKey: 'VITE_AI_ENTRY',
-    prodPath: 'child/ai/',
-  },
+  { name: 'editor', prodPath: 'editor/' },
+  { name: 'flow', prodPath: 'flow/' },
+  { name: 'ai', prodPath: 'ai/' },
 ]
 
 // ── Store ──
@@ -130,20 +116,25 @@ export const useMicroAppStore = defineStore('microApp', () => {
     allApps.value.filter(a => a.layout === 'without-menu'),
   )
 
+  /** 开发环境子应用入口地址（Vite 需要静态 import.meta.env 访问） */
+  const DEV_ENTRIES: Record<string, string> = {
+    editor: import.meta.env.VITE_EDITOR_ENTRY,
+    flow: import.meta.env.VITE_FLOW_ENTRY,
+    ai: import.meta.env.VITE_AI_ENTRY,
+  }
+
   function getBuiltinEntry(b: BuiltinAppConfig): string {
     const entry = import.meta.env.DEV
-      ? (import.meta.env[b.envKey] as string || `http://localhost:3000/`)
+      ? (DEV_ENTRIES[b.name] || `http://localhost:3000/`)
       : `${window.location.origin}${BASE_PATH}${b.prodPath}`
     console.log(`[microApp] getBuiltinEntry: ${b.name} → ${entry}`)
     return entry
   }
 
-  /** 服务端应用 entry：开发环境优先读 VITE_{NAME}_ENTRY 环境变量 */
+  /** 服务端应用 entry：开发环境优先读环境变量，回退到服务端配置 */
   function getServerAppEntry(app: MicroAppConfig): string {
-    if (import.meta.env.DEV) {
-      const envKey = `VITE_${app.name.toUpperCase()}_ENTRY`
-      const envVal = import.meta.env[envKey] as string | undefined
-      if (envVal) return envVal
+    if (import.meta.env.DEV && DEV_ENTRIES[app.name]) {
+      return DEV_ENTRIES[app.name]
     }
     return app.url
   }

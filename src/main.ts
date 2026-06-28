@@ -7,8 +7,8 @@
  * 3. 注入 401 handler（带 router.push）
  * 4. 恢复用户会话（fetchUser）
  * 5. 注册内置子应用（静态配置，立即可用）
- * 6. 启动 qiankun（registerBuiltin 后立即 start）
- * 7. 拉取服务端子应用配置（合并/覆盖）
+ * 6. 拉取服务端子应用配置（合并/覆盖）
+ * 7. qiankun start() 由 ClassicSidebarLayout mounted 时调用（#micro-container 就绪后）
  *
  * ⚠️ 认证 store 统一使用 platform-shared 的 useAuthStore（同名 'auth'）。
  *    不再维护本地 useAuthStore，避免两套实例导致 token 状态不同步。
@@ -18,7 +18,7 @@ import { createPinia } from 'pinia'
 import 'element-plus/dist/index.css'
 import '@schema-platform/platform-shared/styles/theme.scss'
 import '@schema-platform/platform-shared/styles/css-variables.scss'
-import { initGlobalState, start } from 'qiankun'
+import { initGlobalState } from 'qiankun'
 import { useAuthStore } from '@schema-platform/platform-shared/utils/stores/authStore'
 import { useMicroAppStore, setGlobalStateActions } from '@/stores/microApp'
 import { setRouter } from '@/composables/useSubAppProps'
@@ -85,10 +85,8 @@ const microAppStore = useMicroAppStore()
 // 1. 内置子应用立即注册（不依赖网络）
 microAppStore.registerBuiltin()
 
-// 2. 启动 qiankun
-start({ sandbox: false })
-
-// 3. 并行：恢复会话 + 拉取服务端配置
+// 2. 并行：恢复会话 + 拉取服务端配置
+// qiankun start() 由 ClassicSidebarLayout 在 #micro-container 就绪后调用
 Promise.all([
   restoreSession(),
   microAppStore.fetchApps().catch((err: unknown) => {
