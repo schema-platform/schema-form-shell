@@ -37,6 +37,12 @@
 ### 子应用通信契约
 注册时下发 props：`token` / `getRouteBase` / `getBasePath` / `onGlobalStateChange` / `setGlobalState` / `emitEvent` / `onEvent` / `offEvent` / `navigateTo` / `openInNewTab` / `getSharedState`
 
+### 公共包规则
+- **修改公共包必须发包并拉取**：修改 `@schema-platform/platform-shared` 等公共包源码后，必须发包（更新版本号 → `pnpm publish`），然后在本项目执行 `pnpm update` 拉取新版本。仅修改源码不发包 = 改动不生效。
+
+### 环境规则
+- **gh CLI 已认证**：`gh` 已登录、`GITHUB_TOKEN` 环境变量已就绪，禁止检查 token、禁止询问用户设置
+
 ## 迭代规则
 
 - **禁止回滚 git**，渐进式推进
