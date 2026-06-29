@@ -4,10 +4,14 @@
  * Route structure:
  * - /login                    → LoginView (public)
  * - /sso/callback             → SSOCallbackView (public)
- * - /                         → ClassicSidebarLayout → HomeView (首页)
- * - /admin/micro-apps         → ClassicSidebarLayout → MicroAppManageView (管理页)
- * - /app/:pathMatch(.*)*      → ClassicSidebarLayout + qiankun (带菜单的子应用容器)
+ * - /                         → ClassicSidebarLayout
+ *   ├── ''                    → HomeView (首页)
+ *   ├── admin/micro-apps      → MicroAppManageView (管理页)
+ *   └── app/:pathMatch(.*)*   → 子应用容器（qiankun #micro-container）
  * - /standalone/:pathMatch(.*)* → StandaloneLayout (不带菜单)
+ *
+ * 关键：/app/* 是 / 的子路由，保证 ClassicSidebarLayout 在首页和子应用之间
+ * 不会销毁重建，避免菜单重复渲染和 qiankun 容器闪烁。
  */
 import { createRouter, createWebHistory } from 'vue-router'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
@@ -36,7 +40,7 @@ const router = createRouter({
       meta: { public: true },
     },
 
-    // ---- 带菜单的页面（首页 + 管理页） ----
+    // ---- ClassicSidebarLayout 统一壳（首页 + 管理页 + 子应用） ----
     {
       path: '/',
       component: () => import('@/layouts/ClassicSidebarLayout.vue'),
@@ -52,14 +56,13 @@ const router = createRouter({
           component: () => import('@/views/MicroAppManageView.vue'),
           meta: { admin: true },
         },
+        // 子应用容器 —— 渲染空节点，实际内容由 ClassicSidebarLayout 的 #micro-container 接管
+        {
+          path: 'app/:pathMatch(.*)*',
+          name: 'app',
+          component: { render: () => null },
+        },
       ],
-    },
-
-    // ---- 带菜单的微应用容器（独立路由） ----
-    {
-      path: '/app/:pathMatch(.*)*',
-      name: 'app',
-      component: () => import('@/layouts/ClassicSidebarLayout.vue'),
     },
 
     // ---- 不带菜单的微应用容器 ----

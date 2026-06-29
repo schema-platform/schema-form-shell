@@ -106,11 +106,12 @@ export const useMicroAppStore = defineStore('microApp', () => {
       const registrations = serverApps.map(app => {
         const entry = getEntry(app)
         const rule = buildActiveRule(app.activeRule)
-        shellLog.info(`→ ${app.name}: entry=${entry}, activeRule=${app.activeRule}, layout=${app.layout}`)
+        const container = app.layout === 'without-menu' ? '#standalone-container' : '#micro-container'
+        shellLog.info(`→ ${app.name}: entry=${entry}, activeRule=${app.activeRule}, layout=${app.layout}, container=${container}`)
         return {
           name: app.name,
           entry,
-          container: '#micro-container',
+          container,
           activeRule: rule,
           props: buildProps(app.name),
         }

@@ -29,7 +29,6 @@ layoutStore.restoreCollapsed()
 const BASE = APP_CONFIGS.shell.basePath
 
 const isMicroApp = computed(() => {
-  // route.path 不含 base 前缀，拼回去匹配 activeRule
   const p = `${BASE.replace(/\/$/, '')}${route.path}`
   return microAppStore.allApps.some(app => {
     const raw = Array.isArray(app.activeRule)
@@ -41,7 +40,26 @@ const isMicroApp = computed(() => {
     })
   })
 })
-const loading = ref(true)
+
+const loading = ref(false)
+let loadingTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearLoadingTimer() {
+  if (loadingTimer) {
+    clearTimeout(loadingTimer)
+    loadingTimer = null
+  }
+}
+
+function startLoadingTimer() {
+  clearLoadingTimer()
+  loadingTimer = setTimeout(() => {
+    if (loading.value) {
+      shellLog.warn('loading timeout (10s), auto-hiding')
+      loading.value = false
+    }
+  }, 10000)
+}
 
 function toggleCollapse() {
   layoutStore.toggleCollapse()
@@ -50,6 +68,39 @@ function toggleCollapse() {
 function handleSubAppMounted() {
   shellLog.info('sub-app mounted via event')
   loading.value = false
+  clearLoadingTimer()
+}
+
+// 进入子应用路由时显示 loading，离开时隐藏
+watch(isMicroApp, (isApp) => {
+  if (isApp) {
+    loading.value = true
+    startLoadingTimer()
+  } else {
+    loading.value = false
+    clearLoadingTimer()
+  }
+}, { immediate: true })
+
+// 用 MutationObserver 检测子应用是否已渲染（兜底：qiankun 可能不触发事件）
+let observer: MutationObserver | null = null
+
+function startContainerObserver() {
+  const container = document.getElementById('micro-container')
+  if (!container || observer) return
+  observer = new MutationObserver(() => {
+    if (loading.value && container.childElementCount > 0) {
+      shellLog.info('sub-app detected via DOM mutation, hiding loading')
+      loading.value = false
+      clearLoadingTimer()
+    }
+  })
+  observer.observe(container, { childList: true })
+}
+
+function stopContainerObserver() {
+  observer?.disconnect()
+  observer = null
 }
 
 function tryStartQiankun() {
@@ -63,7 +114,8 @@ function tryStartQiankun() {
 onMounted(() => {
   shellLog.info('ClassicSidebarLayout mounted')
   onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
-  // #micro-container 已在 DOM，如果已注册就立即 start，否则等注册完成
+  startContainerObserver()
+
   tryStartQiankun()
   if (!(window as any).__qiankun_started__) {
     const stop = watch(() => microAppStore.registered, (val) => {
@@ -77,6 +129,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   offShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  clearLoadingTimer()
+  stopContainerObserver()
 })
 </script>
 

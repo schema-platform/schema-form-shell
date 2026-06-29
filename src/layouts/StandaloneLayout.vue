@@ -13,10 +13,48 @@ import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const loading = ref(true)
 const microAppStore = useMicroAppStore()
+let loadingTimer: ReturnType<typeof setTimeout> | null = null
+let observer: MutationObserver | null = null
+
+function clearLoadingTimer() {
+  if (loadingTimer) {
+    clearTimeout(loadingTimer)
+    loadingTimer = null
+  }
+}
 
 function handleSubAppMounted() {
   shellLog.info('sub-app mounted via event')
   loading.value = false
+  clearLoadingTimer()
+}
+
+function startLoadingTimer() {
+  clearLoadingTimer()
+  loadingTimer = setTimeout(() => {
+    if (loading.value) {
+      shellLog.warn('loading timeout (10s), auto-hiding')
+      loading.value = false
+    }
+  }, 10000)
+}
+
+function startContainerObserver() {
+  const container = document.getElementById('standalone-container')
+  if (!container || observer) return
+  observer = new MutationObserver(() => {
+    if (loading.value && container.childElementCount > 0) {
+      shellLog.info('sub-app detected via DOM mutation, hiding loading')
+      loading.value = false
+      clearLoadingTimer()
+    }
+  })
+  observer.observe(container, { childList: true })
+}
+
+function stopContainerObserver() {
+  observer?.disconnect()
+  observer = null
 }
 
 function tryStartQiankun() {
@@ -30,6 +68,8 @@ function tryStartQiankun() {
 onMounted(() => {
   shellLog.info('StandaloneLayout mounted')
   onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  startLoadingTimer()
+  startContainerObserver()
   tryStartQiankun()
   if (!(window as any).__qiankun_started__) {
     const stop = watch(() => microAppStore.registered, (val) => {
@@ -43,6 +83,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   offShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  clearLoadingTimer()
+  stopContainerObserver()
 })
 </script>
 
@@ -52,7 +94,7 @@ onUnmounted(() => {
       <el-icon :class="$style.loadingIcon" :size="32"><Loading /></el-icon>
       <span>加载中...</span>
     </div>
-    <div id="micro-container" :class="$style.container" />
+    <div id="standalone-container" :class="$style.container" />
   </div>
 </template>
 
@@ -96,7 +138,7 @@ onUnmounted(() => {
 
 <!-- 全局：隐藏子应用 index.html 的 #loading -->
 <style>
-#micro-container #loading {
+#standalone-container #loading {
   display: none !important;
 }
 </style>
