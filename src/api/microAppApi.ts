@@ -51,15 +51,15 @@ export async function createMicroApp(data: MicroAppFormData): Promise<MicroAppCo
 
 /** 更新子应用 */
 export async function updateMicroApp(id: string, data: Partial<MicroAppFormData>): Promise<MicroAppConfig> {
-  return apiClient.put<MicroAppConfig>(`/micro-apps/${id}`, data)
+  return apiClient.post<MicroAppConfig>(`/micro-apps/${id}`, data)
 }
 
 /** 删除子应用 */
 export async function deleteMicroApp(id: string): Promise<void> {
-  await apiClient.delete(`/micro-apps/${id}`)
+  await apiClient.post(`/micro-apps/${id}/delete`)
 }
 
 /** 切换子应用状态（启用/停用） */
 export async function toggleMicroAppStatus(id: string, status: 'active' | 'inactive'): Promise<MicroAppConfig> {
-  return apiClient.patch<MicroAppConfig>(`/micro-apps/${id}`, { status })
+  return apiClient.post<MicroAppConfig>(`/micro-apps/${id}/toggle-status`, { status })
 }

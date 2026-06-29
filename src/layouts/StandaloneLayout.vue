@@ -4,24 +4,40 @@
  * 全屏无 chrome，容器 ID: standalone-container
  */
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
-import { start } from 'qiankun'
+import { start as qiankunStart } from 'qiankun'
+import { shellLog } from '@schema-platform/platform-shared/utils/logger'
+import { useMicroAppStore } from '@/stores/microApp'
 import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const loading = ref(true)
+const microAppStore = useMicroAppStore()
 
 function handleSubAppMounted() {
-  console.log('[StandaloneLayout] sub-app mounted via event')
+  shellLog.info('sub-app mounted via event')
   loading.value = false
 }
 
-onMounted(() => {
-  console.log('[StandaloneLayout] mounted')
-  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
-  if (!(window as any).__qiankun_started__) {
+function tryStartQiankun() {
+  if (!(window as any).__qiankun_started__ && microAppStore.registered) {
     (window as any).__qiankun_started__ = true
-    start({ sandbox: false })
+    qiankunStart()
+    shellLog.info('qiankun started')
+  }
+}
+
+onMounted(() => {
+  shellLog.info('StandaloneLayout mounted')
+  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  tryStartQiankun()
+  if (!(window as any).__qiankun_started__) {
+    const stop = watch(() => microAppStore.registered, (val) => {
+      if (val) {
+        tryStartQiankun()
+        stop()
+      }
+    })
   }
 })
 

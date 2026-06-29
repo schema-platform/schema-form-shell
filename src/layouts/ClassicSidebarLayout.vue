@@ -6,7 +6,7 @@
  * - 其他路由 → 显示 <router-view />
  */
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useLayoutStore } from '@schema-form/business-shared/stores/layout'
 import { useMicroAppStore } from '@/stores/microApp'
@@ -17,7 +17,8 @@ import GlobalSearch from '@/components/GlobalSearch.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 import { Loading } from '@element-plus/icons-vue'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
-import { start } from 'qiankun'
+import { start as qiankunStart } from 'qiankun'
+import { shellLog } from '@schema-platform/platform-shared/utils/logger'
 import { onShellEvent, offShellEvent } from '@/composables/useSubAppProps'
 
 const route = useRoute()
@@ -28,7 +29,8 @@ layoutStore.restoreCollapsed()
 const BASE = APP_CONFIGS.shell.basePath
 
 const isMicroApp = computed(() => {
-  const p = location.pathname
+  // route.path 不含 base 前缀，拼回去匹配 activeRule
+  const p = `${BASE.replace(/\/$/, '')}${route.path}`
   return microAppStore.allApps.some(app => {
     const raw = Array.isArray(app.activeRule)
       ? app.activeRule
@@ -46,16 +48,30 @@ function toggleCollapse() {
 }
 
 function handleSubAppMounted() {
-  console.log('[ClassicSidebarLayout] sub-app mounted via event')
+  shellLog.info('sub-app mounted via event')
   loading.value = false
 }
 
-onMounted(() => {
-  console.log('[ClassicSidebarLayout] mounted')
-  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
-  if (!(window as any).__qiankun_started__) {
+function tryStartQiankun() {
+  if (!(window as any).__qiankun_started__ && microAppStore.registered) {
     (window as any).__qiankun_started__ = true
-    start({ sandbox: false })
+    qiankunStart()
+    shellLog.info('qiankun started')
+  }
+}
+
+onMounted(() => {
+  shellLog.info('ClassicSidebarLayout mounted')
+  onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
+  // #micro-container 已在 DOM，如果已注册就立即 start，否则等注册完成
+  tryStartQiankun()
+  if (!(window as any).__qiankun_started__) {
+    const stop = watch(() => microAppStore.registered, (val) => {
+      if (val) {
+        tryStartQiankun()
+        stop()
+      }
+    })
   }
 })
 

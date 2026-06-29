@@ -10,6 +10,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { registerMicroApps } from 'qiankun'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
+import { shellLog, qiankunLog } from '@schema-platform/platform-shared/utils/logger'
 import { fetchActiveMicroApps, type MicroAppConfig } from '@/api/microAppApi'
 import { createSubAppProps, type SubAppProps } from '@/composables/useSubAppProps'
 
@@ -94,28 +95,40 @@ export const useMicroAppStore = defineStore('microApp', () => {
 
   /** 从服务端拉取配置并注册到 qiankun */
   async function fetchApps(): Promise<void> {
-    console.log('[microApp] fetchApps: start')
+    const t0 = performance.now()
+    shellLog.info('fetchApps: start')
     try {
       error.value = null
       const serverApps = await fetchActiveMicroApps()
-      console.log(`[microApp] fetchApps: server returned ${serverApps.length} apps`)
+      shellLog.perf('fetchApps', `${Math.round(performance.now() - t0)}ms`, `server returned ${serverApps.length} apps`)
       apps.value = serverApps
 
-      const registrations = serverApps.map(app => ({
-        name: app.name,
-        entry: getEntry(app),
-        container: '#micro-container',
-        activeRule: buildActiveRule(app.activeRule),
-        props: buildProps(app.name),
-      }))
+      const registrations = serverApps.map(app => {
+        const entry = getEntry(app)
+        const rule = buildActiveRule(app.activeRule)
+        shellLog.info(`→ ${app.name}: entry=${entry}, activeRule=${app.activeRule}, layout=${app.layout}`)
+        return {
+          name: app.name,
+          entry,
+          container: '#micro-container',
+          activeRule: rule,
+          props: buildProps(app.name),
+        }
+      })
 
-      console.table(registrations.map(r => ({ name: r.name, entry: r.entry })))
-      registerMicroApps(registrations)
+      registerMicroApps(registrations, {
+        beforeLoad: (app) => { qiankunLog.lifecycle('beforeLoad:', app.name); return Promise.resolve() },
+        beforeMount: (app) => { qiankunLog.lifecycle('beforeMount:', app.name); return Promise.resolve() },
+        afterMount: (app) => { qiankunLog.lifecycle('afterMount:', app.name); return Promise.resolve() },
+        beforeUnmount: (app) => { qiankunLog.lifecycle('beforeUnmount:', app.name); return Promise.resolve() },
+        afterUnmount: (app) => { qiankunLog.lifecycle('afterUnmount:', app.name); return Promise.resolve() },
+      })
       registered.value = true
-      console.log(`[microApp] registered: ${registrations.length} apps`)
+      shellLog.perf('registered', `${registrations.length} apps`, `${Math.round(performance.now() - t0)}ms total`)
+      // start() 不在这里调用，由 layout 的 onMounted 调用，确保 #micro-container 已存在于 DOM
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : '加载子应用配置失败'
-      console.error('[microApp] fetchApps failed:', error.value, err)
+      shellLog.error('fetchApps failed:', error.value, err)
     }
   }
 
