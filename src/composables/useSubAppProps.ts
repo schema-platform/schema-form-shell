@@ -125,6 +125,11 @@ export function createSubAppProps(
     },
 
     getBasePath() {
+      const p = window.location.pathname
+      const appBase = `${BASE_PATH}app/${appName}/`
+      const standaloneBase = `${BASE_PATH}standalone/${appName}/`
+      if (p.startsWith(appBase)) return appBase
+      if (p.startsWith(standaloneBase)) return standaloneBase
       return `${BASE_PATH}app/${appName}/`
     },
 

@@ -136,9 +136,15 @@ onUnmounted(() => {
 }
 </style>
 
-<!-- 全局：隐藏子应用 index.html 的 #loading -->
+<!-- 全局：隐藏子应用 #loading + 确保子应用撑满容器 -->
 <style>
 #standalone-container #loading {
   display: none !important;
+}
+#standalone-container,
+#standalone-container > div,
+#standalone-container > div > div {
+  width: 100%;
+  height: 100%;
 }
 </style>

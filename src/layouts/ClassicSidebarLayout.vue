@@ -35,13 +35,15 @@ const isMicroApp = computed(() => {
       ? app.activeRule
       : app.activeRule.split(',').map(s => s.trim()).filter(Boolean)
     return raw.some(r => {
-      const full = r.startsWith('/') ? r : `${BASE.replace(/\/$/, '')}${r}`
+      const full = r.startsWith(BASE) ? r : `${BASE.replace(/\/$/, '')}${r}`
       return p.startsWith(full)
     })
   })
 })
 
 const loading = ref(false)
+/** 上一次命中的子应用名（用于检测子应用之间的切换） */
+let lastMicroAppName = ''
 let loadingTimer: ReturnType<typeof setTimeout> | null = null
 
 function clearLoadingTimer() {
@@ -61,22 +63,53 @@ function startLoadingTimer() {
   }, 10000)
 }
 
+/** 根据路由路径提取命中的子应用名 */
+function getMicroAppName(): string {
+  if (!isMicroApp.value) return ''
+  const p = `${BASE.replace(/\/$/, '')}${route.path}`
+  for (const app of microAppStore.allApps) {
+    const raw = Array.isArray(app.activeRule)
+      ? app.activeRule
+      : app.activeRule.split(',').map(s => s.trim()).filter(Boolean)
+    const matched = raw.some(r => {
+      const full = r.startsWith(BASE) ? r : `${BASE.replace(/\/$/, '')}${r}`
+      return p.startsWith(full)
+    })
+    if (matched) return app.name
+  }
+  return ''
+}
+
 function toggleCollapse() {
   layoutStore.toggleCollapse()
 }
 
-function handleSubAppMounted() {
-  shellLog.info('sub-app mounted via event')
+function handleSubAppMounted(data: { app: string } | unknown) {
+  const appName = (data as { app?: string })?.app ?? ''
+  if (appName) {
+    shellLog.info(`sub-app "${appName}" mounted via event`)
+  } else {
+    shellLog.info('sub-app mounted via event (unknown app)')
+  }
   loading.value = false
   clearLoadingTimer()
 }
 
 // 进入子应用路由时显示 loading，离开时隐藏
-watch(isMicroApp, (isApp) => {
-  if (isApp) {
-    loading.value = true
-    startLoadingTimer()
+// 同时检测子应用之间的切换（isMicroApp 始终为 true 时仍需重置 loading）
+watch(() => route.path, () => {
+  const currentAppName = getMicroAppName()
+  if (currentAppName) {
+    // 在子应用之间切换，或首次进入子应用
+    if (currentAppName !== lastMicroAppName) {
+      shellLog.info(`switching micro-app: "${lastMicroAppName}" → "${currentAppName}"`)
+      loading.value = true
+      startLoadingTimer()
+    }
+    lastMicroAppName = currentAppName
   } else {
+    // 离开子应用路由
+    lastMicroAppName = ''
     loading.value = false
     clearLoadingTimer()
   }
@@ -95,7 +128,7 @@ function startContainerObserver() {
       clearLoadingTimer()
     }
   })
-  observer.observe(container, { childList: true })
+  observer.observe(container, { childList: true, subtree: true })
 }
 
 function stopContainerObserver() {
@@ -161,10 +194,12 @@ onUnmounted(() => {
       </header>
 
       <main :class="$style.main">
-        <!-- 普通页面 -->
-        <router-view v-show="!isMicroApp" />
-        <!-- 子应用容器（始终存在于 DOM，qiankun 需要） -->
-        <div v-show="isMicroApp" :class="$style.microWrapper">
+        <!-- 普通页面（子应用激活时隐藏） -->
+        <div v-show="!isMicroApp" :class="$style.mainInner">
+          <router-view />
+        </div>
+        <!-- 子应用容器：始终存在于 DOM，始终可被 qiankun 操作 -->
+        <div :class="[$style.microWrapper, { [$style.microWrapperActive]: isMicroApp }]">
           <div v-if="loading" :class="$style.loadingOverlay">
             <el-icon :class="$style.loadingIcon" :size="32"><Loading /></el-icon>
             <span>加载中...</span>
@@ -226,9 +261,21 @@ onUnmounted(() => {
   background: var(--bg-color-page);
 }
 
+.mainInner {
+  width: 100%;
+  height: 100%;
+}
+
 .microWrapper {
   position: absolute;
   inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.microWrapperActive {
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .container {
