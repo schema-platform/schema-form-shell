@@ -12,7 +12,7 @@ import { registerMicroApps } from 'qiankun'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
 import { shellLog, qiankunLog } from '@schema-platform/platform-shared/utils/logger'
 import { fetchActiveMicroApps, type MicroAppConfig } from '@/api/microAppApi'
-import { createSubAppProps, type SubAppProps } from '@/composables/useSubAppProps'
+import { createSubAppProps, emitShellEvent, type SubAppProps } from '@/composables/useSubAppProps'
 
 const BASE_PATH = APP_CONFIGS.shell.basePath
 
@@ -93,7 +93,7 @@ export const useMicroAppStore = defineStore('microApp', () => {
     return createSubAppProps(appName, globalStateActions)
   }
 
-  /** 从服务端拉取配置并注册到 qiankun */
+  /** 从服务端拉取子应用配置 */
   async function fetchApps(): Promise<void> {
     const t0 = performance.now()
     shellLog.info('fetchApps: start')
@@ -102,77 +102,85 @@ export const useMicroAppStore = defineStore('microApp', () => {
       const serverApps = await fetchActiveMicroApps()
       shellLog.perf('fetchApps', `${Math.round(performance.now() - t0)}ms`, `server returned ${serverApps.length} apps`)
       apps.value = serverApps
-
-      // 按 activeRule 路径拆分注册：/app/* → #micro-container，/standalone/* → #standalone-container
-      const rawRules = (r: string | string[]) =>
-        Array.isArray(r) ? r : r.split(',').map(s => s.trim()).filter(Boolean)
-
-      const registrations: ReturnType<typeof buildProps> extends never ? never : {
-        name: string
-        entry: string
-        container: string
-        activeRule: (location: Location) => boolean
-        props: SubAppProps
-      }[] = []
-
-      for (const app of serverApps) {
-        const entry = getEntry(app)
-        const allRules = rawRules(app.activeRule)
-        const appRules = allRules.filter(r => r.includes('/app/'))
-        const standaloneRules = allRules.filter(r => r.includes('/standalone/'))
-        const otherRules = allRules.filter(r => !r.includes('/app/') && !r.includes('/standalone/'))
-
-        if (appRules.length > 0) {
-          const container = '#micro-container'
-          shellLog.info(`→ ${app.name} (app): entry=${entry}, activeRule=${appRules}, container=${container}`)
-          registrations.push({
-            name: app.name,
-            entry,
-            container,
-            activeRule: buildActiveRule(appRules),
-            props: buildProps(app.name),
-          })
-        }
-
-        if (standaloneRules.length > 0) {
-          const container = '#standalone-container'
-          shellLog.info(`→ ${app.name} (standalone): entry=${entry}, activeRule=${standaloneRules}, container=${container}`)
-          registrations.push({
-            name: `${app.name}-standalone`,
-            entry,
-            container,
-            activeRule: buildActiveRule(standaloneRules),
-            props: buildProps(app.name),
-          })
-        }
-
-        if (otherRules.length > 0) {
-          const container = app.layout === 'without-menu' ? '#standalone-container' : '#micro-container'
-          shellLog.info(`→ ${app.name} (other): entry=${entry}, activeRule=${otherRules}, container=${container}`)
-          registrations.push({
-            name: app.name,
-            entry,
-            container,
-            activeRule: buildActiveRule(otherRules),
-            props: buildProps(app.name),
-          })
-        }
-      }
-
-      registerMicroApps(registrations, {
-        beforeLoad: (app) => { qiankunLog.lifecycle('beforeLoad:', app.name); return Promise.resolve() },
-        beforeMount: (app) => { qiankunLog.lifecycle('beforeMount:', app.name); return Promise.resolve() },
-        afterMount: (app) => { qiankunLog.lifecycle('afterMount:', app.name); return Promise.resolve() },
-        beforeUnmount: (app) => { qiankunLog.lifecycle('beforeUnmount:', app.name); return Promise.resolve() },
-        afterUnmount: (app) => { qiankunLog.lifecycle('afterUnmount:', app.name); return Promise.resolve() },
-      })
-      registered.value = true
-      shellLog.perf('registered', `${registrations.length} apps`, `${Math.round(performance.now() - t0)}ms total`)
-      // start() 不在这里调用，由 layout 的 onMounted 调用，确保 #micro-container 已存在于 DOM
     } catch (err: unknown) {
       error.value = err instanceof Error ? err.message : '加载子应用配置失败'
       shellLog.error('fetchApps failed:', error.value, err)
     }
+  }
+
+  /** 将当前 apps 数据注册到 qiankun（仅调用一次） */
+  function registerApps(): void {
+    if (registered.value) return
+
+    const rawRules = (r: string | string[]) =>
+      Array.isArray(r) ? r : r.split(',').map(s => s.trim()).filter(Boolean)
+
+    const registrations: {
+      name: string
+      entry: string
+      container: string
+      activeRule: (location: Location) => boolean
+      props: SubAppProps
+    }[] = []
+
+    for (const app of apps.value) {
+      const entry = getEntry(app)
+      const allRules = rawRules(app.activeRule)
+      const appRules = allRules.filter(r => r.includes('/app/'))
+      const standaloneRules = allRules.filter(r => r.includes('/standalone/'))
+      const otherRules = allRules.filter(r => !r.includes('/app/') && !r.includes('/standalone/'))
+
+      if (appRules.length > 0) {
+        const container = '#micro-container'
+        shellLog.info(`→ ${app.name} (app): entry=${entry}, activeRule=${appRules}, container=${container}`)
+        registrations.push({
+          name: app.name,
+          entry,
+          container,
+          activeRule: buildActiveRule(appRules),
+          props: buildProps(app.name),
+        })
+      }
+
+      if (standaloneRules.length > 0) {
+        const container = '#standalone-container'
+        shellLog.info(`→ ${app.name} (standalone): entry=${entry}, activeRule=${standaloneRules}, container=${container}`)
+        registrations.push({
+          name: `${app.name}-standalone`,
+          entry,
+          container,
+          activeRule: buildActiveRule(standaloneRules),
+          props: buildProps(app.name),
+        })
+      }
+
+      if (otherRules.length > 0) {
+        const container = app.layout === 'without-menu' ? '#standalone-container' : '#micro-container'
+        shellLog.info(`→ ${app.name} (other): entry=${entry}, activeRule=${otherRules}, container=${container}`)
+        registrations.push({
+          name: app.name,
+          entry,
+          container,
+          activeRule: buildActiveRule(otherRules),
+          props: buildProps(app.name),
+        })
+      }
+    }
+
+    registerMicroApps(registrations, {
+      beforeLoad: (app) => { qiankunLog.lifecycle('beforeLoad:', app.name); return Promise.resolve() },
+      beforeMount: (app) => { qiankunLog.lifecycle('beforeMount:', app.name); return Promise.resolve() },
+      afterMount: (app) => {
+        qiankunLog.lifecycle('afterMount:', app.name)
+        const name = app.name.replace(/-standalone$/, '')
+        emitShellEvent('shell:sub-app-mounted', { app: name })
+        return Promise.resolve()
+      },
+      beforeUnmount: (app) => { qiankunLog.lifecycle('beforeUnmount:', app.name); return Promise.resolve() },
+      afterUnmount: (app) => { qiankunLog.lifecycle('afterUnmount:', app.name); return Promise.resolve() },
+    })
+    registered.value = true
+    shellLog.perf('registered', `${registrations.length} apps`)
   }
 
   function getApp(name: string): MicroAppConfig | undefined {
@@ -187,6 +195,7 @@ export const useMicroAppStore = defineStore('microApp', () => {
     registered,
     error,
     fetchApps,
+    registerApps,
     getApp,
   }
 })

@@ -10,6 +10,7 @@ import type { FormRules } from 'element-plus'
 import { createMicroApp, updateMicroApp, type MicroAppConfig, type MicroAppFormData } from '@/api/microAppApi'
 import FormDialog from '@schema-platform/platform-shared/components/common/FormDialog.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
+import { APP_ICON_NAMES } from '@schema-platform/platform-shared/utils/iconRegistry'
 
 const props = defineProps<{
   visible: boolean
@@ -28,7 +29,7 @@ const defaultForm: MicroAppFormData = {
   name: '',
   displayName: '',
   url: '',
-  icon: 'box',
+  icon: 'grid',
   layout: 'without-menu',
   activeRule: [],
   permissions: [],
@@ -79,7 +80,7 @@ watch(() => props.app, (app) => {
       name: app.name,
       displayName: app.displayName,
       url: app.url,
-      icon: app.icon || 'box',
+      icon: app.icon || 'grid',
       layout: app.layout,
       activeRule: rules,
       permissions: app.permissions ?? [],
@@ -112,11 +113,26 @@ async function handleSubmit() {
   }
 }
 
-const iconOptions = [
-  'box', 'edit', 'connection', 'chat-dot-round', 'document',
-  'setting', 'user', 'data-line', 'monitor', 'files',
-  'folder', 'key', 'lock', 'bell', 'calendar',
+const quickIcons = [
+  'edit', 'connection', 'chat-dot-round', 'document', 'setting', 'user',
+  'data-line', 'monitor', 'files', 'folder', 'key', 'lock', 'bell', 'calendar',
+  'grid', 'platform', 'cpu', 'magic-stick', 'house', 'menu',
 ]
+
+const iconPopoverVisible = ref(false)
+const iconSearch = ref('')
+
+const filteredIcons = computed(() => {
+  const q = iconSearch.value.trim().toLowerCase()
+  if (!q) return APP_ICON_NAMES
+  return APP_ICON_NAMES.filter(name => name.includes(q))
+})
+
+function selectIcon(name: string) {
+  form.value.icon = name
+  iconPopoverVisible.value = false
+  iconSearch.value = ''
+}
 </script>
 
 <template>
@@ -127,7 +143,7 @@ const iconOptions = [
     :loading="saving"
     :form-data="form"
     :rules="rules"
-    label-width="100px"
+    label-width="120px"
     @update:model-value="emit('update:visible', $event)"
     @submit="handleSubmit"
   >
@@ -164,13 +180,52 @@ const iconOptions = [
       <el-form-item label="图标" prop="icon">
         <div :class="$style.iconSelector">
           <div
-            v-for="icon in iconOptions"
+            v-for="icon in quickIcons"
             :key="icon"
             :class="[$style.iconOption, { [$style.iconActive]: formData.icon === icon }]"
             @click="formData.icon = icon"
           >
             <AppIcon :name="icon" :size="20" />
           </div>
+          <div
+            v-if="!quickIcons.includes(formData.icon)"
+            :class="[$style.iconOption, $style.iconActive]"
+            @click="iconPopoverVisible = true"
+          >
+            <AppIcon :name="formData.icon" :size="20" />
+          </div>
+          <el-popover
+            v-model:visible="iconPopoverVisible"
+            placement="bottom-start"
+            :width="380"
+            trigger="click"
+          >
+            <template #reference>
+              <div :class="[$style.iconOption, $style.moreBtn]">
+                <AppIcon name="more-filled" :size="16" />
+                <span :class="$style.moreLabel">更多</span>
+              </div>
+            </template>
+            <div :class="$style.iconPopover">
+              <el-input
+                v-model="iconSearch"
+                placeholder="搜索图标名称"
+                clearable
+                size="small"
+              />
+              <div :class="$style.iconGrid">
+                <div
+                  v-for="icon in filteredIcons"
+                  :key="icon"
+                  :class="[$style.iconOption, { [$style.iconActive]: formData.icon === icon }]"
+                  :title="icon"
+                  @click="selectIcon(icon)"
+                >
+                  <AppIcon :name="icon" :size="18" />
+                </div>
+              </div>
+            </div>
+          </el-popover>
         </div>
       </el-form-item>
 
@@ -234,5 +289,30 @@ const iconOptions = [
   border-color: var(--el-color-primary);
   background: var(--el-color-primary-light-9);
   color: var(--el-color-primary);
+}
+
+.moreBtn {
+  width: auto;
+  padding: 0 10px;
+  gap: 4px;
+}
+
+.moreLabel {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.iconPopover {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.iconGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
 }
 </style>

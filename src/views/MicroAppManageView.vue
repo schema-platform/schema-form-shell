@@ -202,7 +202,7 @@ onMounted(() => {
     <el-table :data="pagedApps" :class="$style.table" stripe>
       <el-table-column label="图标" width="60" align="center">
         <template #default="{ row }">
-          <AppIcon :name="row.icon || 'box'" :size="20" :class="$style.cellIcon" />
+          <AppIcon :name="row.icon || 'grid'" :size="20" :class="$style.cellIcon" />
         </template>
       </el-table-column>
 

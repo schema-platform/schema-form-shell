@@ -86,11 +86,9 @@ function toggleCollapse() {
 
 function handleSubAppMounted(data: { app: string } | unknown) {
   const appName = (data as { app?: string })?.app ?? ''
-  if (appName) {
-    shellLog.info(`sub-app "${appName}" mounted via event`)
-  } else {
-    shellLog.info('sub-app mounted via event (unknown app)')
-  }
+  const expected = getMicroAppName()
+  if (!expected || appName !== expected) return
+  shellLog.info(`sub-app "${appName}" mounted`)
   loading.value = false
   clearLoadingTimer()
 }
@@ -115,27 +113,6 @@ watch(() => route.path, () => {
   }
 }, { immediate: true })
 
-// 用 MutationObserver 检测子应用是否已渲染（兜底：qiankun 可能不触发事件）
-let observer: MutationObserver | null = null
-
-function startContainerObserver() {
-  const container = document.getElementById('micro-container')
-  if (!container || observer) return
-  observer = new MutationObserver(() => {
-    if (loading.value && container.childElementCount > 0) {
-      shellLog.info('sub-app detected via DOM mutation, hiding loading')
-      loading.value = false
-      clearLoadingTimer()
-    }
-  })
-  observer.observe(container, { childList: true, subtree: true })
-}
-
-function stopContainerObserver() {
-  observer?.disconnect()
-  observer = null
-}
-
 function tryStartQiankun() {
   if (!(window as any).__qiankun_started__ && microAppStore.registered) {
     (window as any).__qiankun_started__ = true
@@ -147,7 +124,6 @@ function tryStartQiankun() {
 onMounted(() => {
   shellLog.info('ClassicSidebarLayout mounted')
   onShellEvent('shell:sub-app-mounted', handleSubAppMounted)
-  startContainerObserver()
 
   tryStartQiankun()
   if (!(window as any).__qiankun_started__) {
@@ -163,7 +139,6 @@ onMounted(() => {
 onUnmounted(() => {
   offShellEvent('shell:sub-app-mounted', handleSubAppMounted)
   clearLoadingTimer()
-  stopContainerObserver()
 })
 </script>
 

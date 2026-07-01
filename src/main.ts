@@ -82,11 +82,11 @@ setGlobalStateActions({
 
 const microAppStore = useMicroAppStore()
 
-// 并行：恢复会话 + 拉取服务端配置并注册
-// qiankun start() 由 ClassicSidebarLayout 在 #micro-container 就绪后调用
+// 并行：恢复会话 + 拉取服务端配置
+// 拉取完成后注册到 qiankun，start() 由 ClassicSidebarLayout 在 #micro-container 就绪后调用
 Promise.all([
   restoreSession(),
-  microAppStore.fetchApps().catch((err: unknown) => {
+  microAppStore.fetchApps().then(() => microAppStore.registerApps()).catch((err: unknown) => {
     console.error('[shell] Failed to fetch micro-app configs:', err)
   }),
 ])
