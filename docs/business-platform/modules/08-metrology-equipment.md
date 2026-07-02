@@ -182,9 +182,16 @@ Gauge: 按期检定率
 
 | 界面 | schemaId | 验收 |
 |------|----------|------|
-| ME-01 | — | ⬜ |
-| ME-08 | — | ⬜ |
-| EQ-04 | — | ⬜ |
+| ME-01 | `metrology-device-list` | ✅ A级 |
+| ME-02 | `metrology-device-register` | ✅ seed B级 |
+| ME-03 | `metrology-device-detail` | ✅ seed B级 |
+| ME-04~07 | `metrology-calibration-*` / `metrology-cert-list` | ✅ seed B级 |
+| ME-08 | `metrology-expiry-dashboard` | ✅ seed B级 |
+| ME-09 | `metrology-stats` | ✅ seed B级 |
+| EQ-01~03 | `equip-asset-*` | ✅ seed B级 |
+| EQ-04 | `equip-requisition-apply` | ✅ seed B级 |
+| EQ-05~09 | `equip-*` | ✅ seed B级 |
+| EQ-10 | `equip-stats-dashboard` | ✅ seed B级 |
 
 ---
 

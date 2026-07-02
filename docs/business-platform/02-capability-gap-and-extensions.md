@@ -75,6 +75,13 @@
 | E-32 | **search-bar 容器 Widget** | 列表搜索区 | P1 | 与 advanced-table 联动 |
 | E-33 | **confirm 用 ElMessageBox** | 删除/撤回 | P1 | 替代 window.confirm |
 | E-35 | **列模板库** | 快速搭建 | P1 | 状态列/操作列一键插入 |
+| **E-45** | **FgCrudListPage 页面复合 Widget** | 全部台账 | **P0** | 对标 JeecgBoot `useListPage`：搜索+表格+Modal CRUD+导入导出内聚；见 [16](../16-oss-ui-deconstruction-and-editor-evolution.md) §4.2 |
+| **E-46** | **SearchSchema 属性编辑器** | 全部列表 | **P0** | PropertyPanel 编辑 searchBar/searchSchemas；补齐 dateRange/dict/cascader |
+| **E-47** | **FgFlowApplyPage** | 全部申请 | P1 | 对标 O2OA 编辑表单：Form+提交+联动+草稿 |
+| **E-48** | **FgFlowDetailPage** | 全部详情审批 | P1 | Tabs：Descriptions+Timeline+附件+FlowTaskActions |
+| **E-49** | **FgContentPublishPage** | OA 公告 | P2 | 对标 O2OA CMS 编辑/阅读双表单 |
+| **E-50** | **域复合 Widget 框架** | 用印/合同/余额 | P2 | 可配置 API 的域 Widget，继承 CrudListPage 模式 |
+| E-44 | 撤回/撤销/取消 Flow actions | 台账行操作 | P1 | 对标 JeecgBoot 撤回/撤销语义 |
 
 ### 2.3 Editor 配置与运行时
 

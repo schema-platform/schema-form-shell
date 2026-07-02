@@ -1,6 +1,6 @@
 # 10 — 总执行计划（能力优先 · 分块验收 · 分模块提交）
 
-> **原则**：能力平台不满足时先修能力平台，再搭业务；同一时刻只改一个子项目；每块验完再 commit。
+> **原则**：能力平台不满足时先修能力平台，再搭业务；**状态以 [11-实现状态](./11-implementation-status.md) 为准**。
 
 ## 执行顺序总览
 
@@ -36,18 +36,27 @@ Phase D  业务落地（能力就绪后）
   └─ D5 Wave1 deliverable 工厂 + 80+ Schema seed  ✅
   └─ D6 Phase2–4 模块菜单 + pattern deliverables  ✅
 
-Phase F  Wave 2–4 能力与生产化
-  └─ F1 E-05/E-08/E-15 Editor Widget  ✅
-  └─ F2 F-07 FlowVariablesPanel + embed H5  ✅
-  └─ F3 S-05 公告 API + 详情 deliverable  ✅
-  └─ F4 5 内置 Flow + 金额网关 + Webhook 绑定  ✅
-  └─ F5 S-09/S-10 审计/计装 API + E-17/E-19 Widget  ✅
-  └─ F6 A-06/A-08/SH-02 + 80+ Schema seed  ✅
-  └─ F7 多租户 demo + E2E + 运维文档  ✅
+Phase F  Wave 2–4 seed/骨架（深度见 11-implementation-status.md）
+  └─ F1 E-05/E-08/E-15  ✅ 骨架 / E-15 联动待闭环
+  └─ F2 F-07 + embed H5  ✅ / F-02 会签待 E2E
+  └─ F3 S-05 公告  ✅
+  └─ F4 6 Flow + 6 Webhook  ✅
+  └─ F5 S-09/S-10 + E-17/E-19  ✅
+  └─ F6 A-06/A-08/SH-02  🟡 SH-02 仅菜单
+  └─ F7 demo + E2E skeleton  ✅
+
+Phase G  Loop backlog L-01~32  ✅  见 13-phase-g-archive.md
+  └─ G1~G4 Cap/图标/Biz seed/E2E/文档  ✅
+
+Phase H  深度交付（活跃 backlog → 12-loop-backlog.md）
+  └─ H1 能力：F-01 引擎、F-06 Timer、E-10/E-14
+  └─ H2 业务：B→A 字段对齐、C 占位清零
+  └─ H3 验收：浏览器 UI E2E、功能点矩阵
 
 Phase E  文档与验收
-  └─ E1 模块文档 Phase1 验收标记  ✅
+  └─ E1 模块文档 Phase1 验收标记  ✅ L-30/L-32
   └─ E2 shell routing / README 对齐  ✅
+  └─ E3 11-implementation-status 对照表  ✅
 ```
 
 ## 分块明细
@@ -84,8 +93,12 @@ Phase E  文档与验收
 | **D2** 请假全流程 E2E | ✅ 已提交 | schema-form-server `39e063a` |
 | **C1–C4** Wave0 Flow/AI/Editor 能力 | ✅ 已实现 | flow embed + E-01/E-02 + A-01/A-05 + E-11/E-13 |
 | **D5–D6** Wave1–3 deliverable 工厂 + 扩展模块 | ✅ 已实现 | 70+ schema codes + 扩展菜单树 |
-| **F1–F5** Wave2–4 能力与生产化 | ✅ 已实现 | S-05/E-05/E-08/E-15/F-07/A-06/SH-02/E2E skeleton |
-| **E** 文档与验收 | ✅ 已更新 | shell docs + server ops 指南 |
+| **F1–F5** Wave2–4 能力与 seed | 🟡 骨架完成 | 80 schema + 6 webhook；**A 级页 ~18**，见 [11-实现状态](./11-implementation-status.md) |
+| **F6–F7** AI/Search/E2E | 🟡 部分 | SH-02 未搜 Schema；E2E skeleton only |
+| **G** Loop L-01~32 | ✅ 已完成 | 见 13-phase-g-archive.md |
+| **H** 深度交付 | ⬜ 待做 | 12-loop-backlog.md H-01~13（含 mock 治理 H-12、AI metadata H-11） |
+
+> **状态单一来源**：[11-implementation-status.md](./11-implementation-status.md) — 含能力项、80 schema 分级、分模块对照、未注册图标、Flow 绑定、推荐执行顺序。
 
 ## 关联修复规则
 

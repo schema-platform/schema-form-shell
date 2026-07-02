@@ -163,10 +163,18 @@ seed: `schema-form-server/src/utils/seedAdmin.ts`
 
 | 界面 | schemaId | 菜单 | 验收 |
 |------|----------|------|------|
-| SA-02 | `sys-user-mgmt` seed | ✅ | ✅ seed |
-| SA-03 | `sys-role-mgmt` seed | ✅ | ✅ seed |
-| SA-04 | `sys-dept-mgmt` seed | ✅ | ✅ seed |
-| SA-11 | N/A（Shell 过渡） | ✅ | ⬜ |
+| SA-02 | `sys-user-mgmt` | ✅ | ✅ A级 |
+| SA-03 | `sys-role-mgmt` | ✅ | ✅ A级 |
+| SA-04 | `sys-dept-mgmt` | ✅ | ✅ A级 |
+| SA-06 | `sys-dict-manage` | ✅ | ✅ A级 |
+| SA-07 | `sys-config-manage` | ✅ | ✅ A级 |
+| SA-08 | `sys-audit-log` | ✅ | ✅ A级 |
+| SA-11 | `sys-micro-app-manage` | ✅ | ✅ seed |
+| SA-01 | `sys-menu-manage` | ✅ | 🟡 C级占位 |
+| SA-05 | `sys-post-manage` | ✅ | 🟡 C级占位 |
+| SA-09 | `sys-login-log` | ✅ | 🟡 C级占位 |
+| SA-10 | `sys-online-users` | — | 🟡 C级占位 |
+| SA-12 | `sys-tenant-manage` | — | 🟡 C级占位 |
 
 ---
 

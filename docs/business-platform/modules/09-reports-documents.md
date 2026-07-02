@@ -222,9 +222,18 @@ flowchart LR
 
 | 界面 | schemaId | 验收 |
 |------|----------|------|
-| RP-02 | — | ⬜ |
-| RP-11 | — | ⬜ |
-| RT-02 | — | ⬜ |
+| RP-02 | `report-dashboard-general` | ✅ A级（S-11 aggregate API） |
+| RT-03 | `report-doc-detail` | ✅ A级 |
+| RP-09 | `report-adhoc-query` | ✅ seed（E-20 FgAdhocQuery） |
+| RP-03~08 | `report-*-summary` | ✅ seed B级 |
+| RP-10 | `report-subscription` | ✅ seed B级 |
+| RT-01 | `report-doc-list` | ✅ seed B级 |
+| RT-02 | `report-doc-edit` | ✅ seed B级 |
+| RT-05~08 | `report-doc-*` | ✅ seed B级 |
+| RP-01 | `report-center-home` | 🟡 C级占位 |
+| RP-11 | `report-export-center` | 🟡 C级占位 |
+| RP-12 | `report-exec-screen` | 🟡 C级占位 |
+| RT-04 | `report-doc-templates` | 🟡 C级占位 |
 
 ---
 

@@ -10,6 +10,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMenu } from '@/composables/useMenu'
 import { resolveIconName } from '@schema-platform/platform-shared/utils/iconResolver'
 import type { MenuTreeNode } from '@/types/menu'
+import {
+  findNodeByPath,
+  menuItemIndex,
+  navigateMenuNode,
+  resolveActiveMenuIndex,
+} from '@/utils/menuRoute'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 /** 数据库中的图标名 → ICON_MAP 中实际存在的 kebab-case 名称 */
@@ -49,74 +55,28 @@ function resolveIcon(name?: string): string {
   return resolveIconName(name)
 }
 
-/** 计算 el-menu 的 default-active */
-const activeIndex = computed(() => {
-  const p = route.path
-  const q = route.query
-  if (p.includes('/editor/view') && q.id) {
-    const node = findNodeBySchemaId(menuTree.value, q.id as string)
-    if (node?.path) return node.path
-  }
-  return p
-})
-
-function findNodeBySchemaId(nodes: MenuTreeNode[], schemaId: string): MenuTreeNode | undefined {
-  for (const node of nodes) {
-    if (node.schemaId === schemaId) return node
-    if (node.children?.length) {
-      const found = findNodeBySchemaId(node.children, schemaId)
-      if (found) return found
-    }
-  }
-  return undefined
-}
+/** 计算 el-menu 的 default-active（菜单 path 唯一，与加载参数分离） */
+const activeIndex = computed(() =>
+  resolveActiveMenuIndex(route.path, route.query, menuTree.value),
+)
 
 /** 菜单点击导航 */
 function navigateTo(node: MenuTreeNode): void {
-  const routeType = node.routeType || 'micro-app'
-
-  if (routeType === 'schema') {
-    if (node.schemaId) {
-      router.push(`/app/editor/view?id=${node.schemaId}`)
-    }
-    return
-  }
-
-  if (routeType === 'link') {
-    const url = node.url || node.path
-    if (!url) return
-    if (node.target === '_blank') {
-      window.open(url, '_blank')
-    } else {
-      window.location.href = url
-    }
-    return
-  }
-
-  // micro-app — 路径由服务端直接返回
-  if (!node.path) return
-  if (node.target === '_blank') {
-    const resolved = router.resolve(node.path)
-    window.open(resolved.href, '_blank')
-  } else {
-    router.push(node.path)
-  }
+  navigateMenuNode(router, node)
 }
 
 function handleSelect(index: string): void {
   const node = findNodeByPath(menuTree.value, index)
-  if (node) navigateTo(node)
+  if (node) {
+    navigateTo(node)
+    return
+  }
+  const byId = menuTree.value.flatMap(collectNodes).find((n) => n.id === index)
+  if (byId) navigateTo(byId)
 }
 
-function findNodeByPath(nodes: MenuTreeNode[], path: string): MenuTreeNode | undefined {
-  for (const node of nodes) {
-    if (node.path === path) return node
-    if (node.children?.length) {
-      const found = findNodeByPath(node.children, path)
-      if (found) return found
-    }
-  }
-  return undefined
+function collectNodes(node: MenuTreeNode): MenuTreeNode[] {
+  return [node, ...(node.children?.flatMap(collectNodes) ?? [])]
 }
 
 defineExpose({ resetMenu: () => {} })
@@ -147,6 +107,7 @@ defineExpose({ resetMenu: () => {} })
     <!-- Menu -->
     <el-menu
       v-else
+      :key="activeIndex"
       :default-active="activeIndex"
       :collapse="collapsed"
       :collapse-transition="false"
@@ -167,14 +128,14 @@ defineExpose({ resetMenu: () => {} })
           <el-menu-item
             v-for="child in node.children"
             :key="child.id"
-            :index="child.path || child.id"
+            :index="menuItemIndex(child)"
           >
             {{ child.name }}
           </el-menu-item>
         </el-sub-menu>
         <el-menu-item
           v-else
-          :index="node.path || node.id"
+          :index="menuItemIndex(node)"
         >
           <AppIcon :name="resolveIcon(node.icon)" :size="18" />
           <template #title>{{ node.name }}</template>

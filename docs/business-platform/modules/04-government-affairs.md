@@ -148,9 +148,16 @@ Tab3 办理信息
 
 | 界面 | schemaId | flowDefId | 验收 |
 |------|----------|-----------|------|
-| GA-01 | — | — | ⬜ |
-| GA-02 | — | — | ⬜ |
-| GA-10 | — | — | ⬜ |
+| GA-03 | `gov-case-detail` | — | ✅ A级 |
+| GA-01 | `gov-case-accept` | ✅ 并联审批 | ✅ seed B级 |
+| GA-02 | `gov-case-list` | — | ✅ seed B级 |
+| GA-04 | `gov-parallel-board` | — | ✅ seed B级 |
+| GA-05 | `gov-license-apply` | ✅ | ✅ seed B级 |
+| GA-06 | `gov-license-list` | — | ✅ seed B级 |
+| GA-07 | `gov-policy-publish` | — | ✅ seed B级 |
+| GA-09 | `gov-supervise-list` | — | ✅ seed B级 |
+| GA-10 | `gov-dashboard-screen` | — | ✅ seed（大屏 E-09） |
+| GA-08 | micro-app `/app/ai/rag` | — | ✅ 菜单 |
 
 ---
 

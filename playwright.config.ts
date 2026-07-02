@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
   use: {
-    baseURL: process.env.SHELL_URL ?? 'http://localhost:5173',
+    baseURL: process.env.SHELL_URL ?? 'http://localhost:5050/schema-platform',
     trace: 'on-first-retry',
   },
 })

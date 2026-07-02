@@ -8,6 +8,17 @@
 - Mock 数据与业务场景一致（请假台账、工作台 KPI），Board 交付物可直接复用
 - **正式运行时**（PublishView）无 API 时不展示 mock，避免误导用户
 
+## 边界（与 Server 真实接口）
+
+| 场景 | 是否允许 mock | 正确做法 |
+|------|---------------|----------|
+| Editor 画布、Widget 未配 API | ✅ `mock.ts` | 仅预览 UI，见 `shouldUseWidgetMock` |
+| 业务 PublishView / Shell 运行时 | ❌ | 配真实 `apiUrl`（submissions / 域 API） |
+| 调试业务列表/表单 | ❌ | 起 `schema-form-server`，seed + 真实 HTTP |
+| Editor 离线改 Schema | ⚠️ 可选 `VITE_USE_MOCK` | 仅改 Schema 结构，**不**代表业务数据 |
+
+**原则**：有 Server 就写/调真实接口；mock 不是业务数据的捷径。Server 侧 `/api/data`、`/api/mock` 为历史演示路由，Phase H **H-12** 计划废弃，业务 deliverable 不得引用。
+
 ## 目录约定
 
 ```

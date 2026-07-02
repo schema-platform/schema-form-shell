@@ -26,14 +26,18 @@
 | 场景 | path 格式 | 示例 |
 |------|-----------|------|
 | Shell 内置页 | 绝对路径 | `/`, `/admin/micro-apps` |
-| Schema 业务页 | `/app/editor/view` + query | `?id={schemaId}` |
+| Schema 业务页 | `/app/editor/view/{schemaCode}` | `/app/editor/view/hr-leave-apply` |
+| Schema legacy | `/app/editor/view?id={publishId}` | 兼容旧链接；菜单高亮按 schemaId 反查 |
+| Schema legacy query | `/app/editor/view?schemaCode=` | 自动重定向到 path 形态 |
 | Editor 子应用 | `/app/editor/{route}` | `/app/editor/instances` |
 | Flow 子应用 | `/app/flow/{route}` | `/app/flow/tasks` |
 | AI 子应用 | `/app/ai/{route}` | `/app/ai/workflows` |
 | 设计器全屏 | `/standalone/{app}/{route}` | `/standalone/editor`, `/standalone/flow/designer` |
 | 外部链接 | url 字段 | — |
 
-**注意：** Schema 菜单的 `path` 统一为 `/app/editor/view`，实际 schemaId 存 `schemaId` 字段；SideMenu 拼接 query。
+**路由与加载分离：** `path` 是菜单唯一身份（高亮、历史、收藏）；`schemaId` / `schemaCode` 决定 Editor 加载哪份已发布 Schema。SideMenu 使用 `menuRoute.ts` 解析高亮，不再共用同一 path。
+
+**注意：** Schema 菜单的 `path` 为 `/app/editor/view/{schemaCode}`（每页唯一）；`schemaId` 存 publishId 供加载与 legacy `?id=` 链接。
 
 ### 1.3 图标规范
 

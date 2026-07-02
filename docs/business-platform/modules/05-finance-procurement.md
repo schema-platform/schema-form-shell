@@ -155,8 +155,8 @@ Card 汇总
 
 | 界面 | schemaId | flowDefId | 验收 |
 |------|----------|-----------|------|
-| FP-01 | — | — | ⬜ |
-| FP-04 | — | — | ⬜ |
+| FP-01 | `fin-expense-apply` | ✅ 报销审批 | ✅ A级（见 FI-01） |
+| FP-04 | `fin-purchase-apply` | ✅ 采购审批 | ✅ seed B级（见 FI-04） |
 
 ---
 

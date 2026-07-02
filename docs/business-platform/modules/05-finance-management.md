@@ -163,9 +163,17 @@
 
 | 界面 | schemaId | flowDefId | 验收 |
 |------|----------|-----------|------|
-| FI-01 | — | — | ⬜ |
-| FI-04 | — | — | ⬜ |
-| FI-09 | — | — | ⬜ |
+| FI-01 | `fin-expense-apply` | ✅ 报销审批 | ✅ A级 |
+| FI-15 | `fin-monthly-close` | — | ✅ A级 |
+| FI-16 | `fin-ledger-balance` | — | ✅ A级 |
+| FI-14 | `fin-bank-reconcile` | — | 🟡 A级 partial |
+| FI-04 | `fin-purchase-apply` | ✅ 采购审批 | ✅ seed B级 |
+| FI-02 | `fin-expense-list` | — | ✅ seed B级 |
+| FI-05 | `fin-purchase-list` | — | ✅ seed B级 |
+| FI-03 | `fin-expense-stats` | — | ✅ seed B级 |
+| FI-09 | `fin-budget-dashboard` | — | ✅ seed B级 |
+| FI-06~13,17 | `fin-*` | 部分 Flow | ✅ seed B级 |
+| FI-07 | `fin-contract-detail` | — | 🟡 C级占位 |
 
 ---
 

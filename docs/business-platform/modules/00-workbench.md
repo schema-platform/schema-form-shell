@@ -137,10 +137,11 @@
 
 | 界面 | schemaId | 菜单 | 验收 |
 |------|----------|------|------|
-| W-01 | `dashboard-workbench` seed | ✅ | ✅ seed |
-| W-02 | — | ✅ | ✅ 菜单 |
-| W-03 | — | P1 | ⬜ |
-| W-04 | — | P1 | ⬜ |
+| W-01 | `dashboard-workbench` | ✅ | ✅ A级 |
+| W-02 | — micro-app | ✅ | ✅ 菜单 |
+| W-03 | micro-app `/app/flow/instances` | ✅ | ✅ 菜单 |
+| W-04 | `workbench-messages` | ✅ | ✅ seed |
+| W-05 | 内嵌 W-01 | — | ✅ A级 |
 
 ---
 

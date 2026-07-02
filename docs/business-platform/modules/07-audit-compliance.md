@@ -158,9 +158,19 @@
 
 | 界面 | schemaId | 验收 |
 |------|----------|------|
-| AU-06 | — | ⬜ |
-| AU-11 | — | ⬜ |
-| AU-13 | 共用 sys-audit-log | ⬜ |
+| AU-06 | `audit-issue-list` | ✅ A级 |
+| AU-07 | `audit-rectify-track` | ✅ seed B级 |
+| AU-13 | `audit-sys-log` | ✅ seed（共用 sys-audit-log API） |
+| AU-01 | `audit-plan-list` | ✅ seed B级 |
+| AU-02 | `audit-plan-edit` | ✅ seed B级 |
+| AU-03 | `audit-project-list` | ✅ seed B级 |
+| AU-04 | `audit-project-detail` | ✅ seed B级 |
+| AU-05 | `audit-working-paper` | ✅ seed B级 |
+| AU-08 | `audit-compliance-check` | ✅ seed B级 |
+| AU-09 | `audit-compliance-form` | ✅ seed B级 |
+| AU-10 | `audit-report-list` | ✅ seed B级 |
+| AU-11 | `audit-report-edit` | ✅ seed B级 |
+| AU-12 | `audit-stats-dashboard` | ✅ seed B级 |
 
 ---
 

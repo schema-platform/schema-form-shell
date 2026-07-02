@@ -163,9 +163,19 @@ OA 办公
 
 | 界面 | schemaId | flowDefId | 验收 |
 |------|----------|-----------|------|
-| OA-06 | — | — | ⬜ |
-| OA-07 | — | — | ⬜ |
-| OA-11 | N/A | — | ⬜ |
+| OA-02 | `oa-notice-publish` | 可选 | ✅ A级 |
+| OA-03 | `oa-notice-detail` | — | ✅ A级 |
+| OA-05 | `oa-meeting-book` | 冲突审批 | ✅ A级 |
+| OA-01 | `oa-notice-list` | — | ✅ seed |
+| OA-06 | `oa-trip-apply` | ✅ 出差审批 | ✅ L3 |
+| OA-07 | `oa-trip-list` | — | ✅ L3 |
+| OA-07b | `oa-trip-detail` | — | ✅ L3 |
+| OA-04 | `oa-meeting-list` | — | ✅ seed B级 |
+| OA-08 | `oa-seal-apply` | ✅ | ✅ seed B级 |
+| OA-10 | `oa-doc-draft` | 多级审批 | ✅ seed B级 |
+| OA-12 | `oa-asset-apply` | ✅ 资产领用 | ✅ seed B级 |
+| OA-11 | micro-app `/app/ai/rag` | — | ✅ 菜单 |
+| OA-09 | `oa-doc-receive` | 传阅流 | ✅ seed B级 |
 
 ---
 

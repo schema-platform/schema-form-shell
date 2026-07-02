@@ -14,6 +14,7 @@ import SideMenu from '@/components/SideMenu.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
+import NotificationBell from '@/components/NotificationBell.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 import { Loading } from '@element-plus/icons-vue'
 import { APP_CONFIGS } from '@schema-platform/platform-shared/qiankun/config'
@@ -164,6 +165,7 @@ onUnmounted(() => {
 
         <div :class="$style.headerRight">
           <GlobalSearch />
+          <NotificationBell />
           <UserDropdown />
         </div>
       </header>

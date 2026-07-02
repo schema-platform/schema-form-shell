@@ -102,6 +102,17 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
+  // legacy schemaCode query → 唯一 path（菜单高亮与路由身份一致）
+  if (
+    to.path === '/app/editor/view'
+    && typeof to.query.schemaCode === 'string'
+    && to.query.schemaCode
+  ) {
+    const { schemaCode, ...rest } = to.query
+    next({ path: `/app/editor/view/${schemaCode}`, query: rest })
+    return
+  }
+
   next()
 })
 

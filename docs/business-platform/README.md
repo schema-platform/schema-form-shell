@@ -18,6 +18,11 @@
 | [08-高级表格列能力规范](./08-advanced-table-column-spec.md) | **Tooltip / Tag / 按钮 / 筛选** 能力与扩展 |
 | [09-Widget Mock 数据规范](./09-widget-mock-spec.md) | **复杂部件 mock.ts** 约定、设计器预览 vs 运行时 |
 | [10-执行计划](./10-execution-plan.md) | 分块路线图与进度 |
+| [11-实现状态对照表](./11-implementation-status.md) | **已完成/未完成单一来源**（能力·模块·图标·Flow） |
+| [14-界面功能点矩阵](./14-interface-feature-matrix.md) | 进度看板（级别/完成态） |
+| **[16-开源UI解构与Editor演进](./16-oss-ui-deconstruction-and-editor-evolution.md)** | **⭐ 业务实现主文档：开源解构 + Editor 扩能力路线** |
+| [15-开源参照基准](./15-open-source-benchmarks.md) | 功能点来源索引 |
+| [interface-specs/](./interface-specs/README.md) | 逐页 Pattern + props 规格（按 16 重写中） |
 | [Server API 映射](../../../schema-form-server/docs/business-api-mapping.md) | **业务模块 ↔ 接口服务** 对齐表 |
 
 ### 模块落地文档

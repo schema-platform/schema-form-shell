@@ -7,6 +7,7 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useMenuStore } from '@/stores/menu'
 import type { MenuTreeNode } from '@/types/menu'
+import { navigateMenuNode, findNodeById } from '@/utils/menuRoute'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const router = useRouter()
@@ -59,13 +60,8 @@ function toggleSearch(): void {
 }
 
 function navigate(item: FlatMenuItem): void {
-  if (item.routeType === 'schema' && item.schemaId) {
-    router.push({ path: item.path || '/app/editor/view', query: { id: item.schemaId } })
-  } else if (item.microAppId && item.path) {
-    router.push(item.path)
-  } else if (item.path) {
-    router.push(item.path)
-  }
+  const node = findNodeById(menuTree.value, item.id)
+  if (node) navigateMenuNode(router, node)
   searchQuery.value = ''
   isExpanded.value = false
 }

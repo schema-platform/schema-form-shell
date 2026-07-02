@@ -11,8 +11,10 @@ import { useRoute, useRouter } from 'vue-router'
 import { useMenu } from '@/composables/useMenu'
 import UserDropdown from '@/components/UserDropdown.vue'
 import GlobalSearch from '@/components/GlobalSearch.vue'
+import NotificationBell from '@/components/NotificationBell.vue'
 import LayoutSwitcher from '@schema-form/business-shared/components/LayoutSwitcher.vue'
 import type { MenuTreeNode } from '@/types/menu'
+import { navigateMenuNode, resolveActiveMenuIndex } from '@/utils/menuRoute'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
 
 const route = useRoute()
@@ -22,14 +24,14 @@ const { menuTree } = useMenu()
 const withoutMenu = computed(() => route.meta?.withoutMenu === true)
 
 function isActive(node: MenuTreeNode): boolean {
-  if (!node.path) return false
-  const p = route.path
-  return p === node.path || p.startsWith(node.path + '/')
+  const active = resolveActiveMenuIndex(route.path, route.query, menuTree.value)
+  if (node.path && active === node.path) return true
+  if (node.children?.some((c) => isActive(c))) return true
+  return false
 }
 
 function navigateTo(node: MenuTreeNode) {
-  if (!node.path) return
-  router.push(node.path)
+  navigateMenuNode(router, node)
 }
 </script>
 
@@ -97,6 +99,7 @@ function navigateTo(node: MenuTreeNode) {
       <!-- 右侧操作区 -->
       <div :class="$style.headerRight">
         <GlobalSearch />
+        <NotificationBell />
         <LayoutSwitcher />
         <UserDropdown />
       </div>

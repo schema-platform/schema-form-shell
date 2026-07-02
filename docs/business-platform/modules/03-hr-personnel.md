@@ -211,10 +211,16 @@ Phase 1 可用 admin 模拟全部角色；Phase 2 补充多账号。
 
 | 界面 | schemaId | flowDefId | webhook | 验收 |
 |------|----------|-----------|---------|------|
-| HR-01 | `hr-leave-apply` seed | ✅ 请假审批 | ✅ | ✅ seed |
-| HR-02 | `hr-leave-list` seed | — | — | ✅ seed |
-| HR-03 | `hr-leave-stats` seed | — | — | ✅ seed |
-| HR-08 | — | — | — | P1 |
+| HR-01 | `hr-leave-apply` | ✅ 请假审批 | ✅ | ✅ A级 |
+| HR-02 | `hr-leave-list` | — | — | ✅ A级 |
+| HR-03 | `hr-leave-stats` | — | — | ✅ A级 |
+| HR-04 | `hr-overtime-apply` | 自定义 | ✅ | ✅ seed B级 |
+| HR-05 | `hr-onboard-apply` | ✅ 入职审批 | ✅ | ✅ seed B级 |
+| HR-06 | `hr-resign-apply` | ✅ 离职审批 | ✅ | ✅ seed B级 |
+| HR-10 | `hr-recruit-apply/list/offer` | ✅ Offer 审批 | ✅ | ✅ seed B级 |
+| HR-07 | `hr-employee-profile` | — | — | 🟡 C级占位 |
+| HR-08 | `hr-org-chart` | — | — | 🟡 C级占位 |
+| HR-09 | `hr-attendance-dashboard` | — | — | ⬜ P2 |
 
 ---
 
