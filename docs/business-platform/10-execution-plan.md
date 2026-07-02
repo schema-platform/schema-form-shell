@@ -63,7 +63,7 @@ Phase E  文档与验收
 | **A5** E-03 嵌套 prop | ✅ 已提交 | schema-form-editor `54926ad` |
 | **A6** E-27 filterable | ✅ 已提交 | schema-form-editor `0a5f12c` |
 | **A7** E-28/E-29 dict + row 表达式 | ✅ 已提交 | schema-form-editor `5cf7157` |
-| **B1** S-08 Flow 菜单 | 进行中 | server seedMenus 路径修复 |
+| **B1** S-08 Flow 菜单 | ✅ 已提交 | schema-form-server `65e1509` |
 
 ## 关联修复规则
 
