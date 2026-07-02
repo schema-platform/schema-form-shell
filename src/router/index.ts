@@ -28,7 +28,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@schema-platform/platform-shared/components/auth/LoginView.vue'),
-      props: { title: 'Schema 业务平台', subtitle: '基础容器' },
+      props: { title: 'Schema 业务平台' },
       meta: { public: true },
     },
 
