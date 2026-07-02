@@ -245,7 +245,17 @@ Flow 现有 embed：
 | `/embed/approval-log?instanceId=` | 审批时间线 ✅ |
 | `/embed/preview?instanceId=` | 流程迷你图 ✅ |
 | `/embed/task-list` | 任务列表 ✅ |
-| `/embed/task/:taskId` | **待补** — 单任务审批操作 |
+| `/embed/task/:taskId` | 单任务审批（表单 + 通过/驳回/委派 + AI 建议）✅ |
+
+**F-08 embed URL 契约：**
+
+| 路由 | 必填参数 | 可选 query | 说明 |
+|------|----------|------------|------|
+| `/embed/task/:taskId` | `taskId`（path 或 `?taskId=`） | `instanceId` | 复用 `TaskDetailView`，`meta.embedded: true` |
+| `/embed/approval-log` | `instanceId` | — | 审批时间线 |
+| `/embed/preview` | `instanceId` | — | 流程迷你图 |
+
+Shell iframe 示例：`/app/flow/embed/task/{{variables.taskId}}?instanceId={{variables.flowInstanceId}}`
 
 **可交付组合（当前即可）：** 列表 → 详情 Schema（只读）+ approval-log iframe；审批操作跳转 `/app/flow/tasks?taskId=`。
 
@@ -445,7 +455,7 @@ BPMN UserTask 配置：
 | **P0** | E-25 | absolute 布局下 `submit` 聚合所有 formId 表单校验 | editor SchemaNode |
 | **P0** | E-03 | AdvancedTable 嵌套字段 `data.xxx` 列 + submission 列表 | editor + 文档约定 |
 | **P0** | E-26 | 联动配置：`LinkageConfig.vue` 写入 `linkages`（非死 `rules`） | editor PropertyPanel |
-| **P1** | F-09 | Flow embed `/embed/task/:taskId` 审批操作 | flow |
+| **P1** | F-08/F-09 | Flow embed `/embed/task/:taskId` 审批操作 | flow ✅ |
 | **P1** | S-13 | submission 回写 `flowInstanceId` | server |
 | **P1** | E-01/02 | FgFlowTimeline + FgFlowTaskActions 替代 iframe 拼装 | editor widgets |
 

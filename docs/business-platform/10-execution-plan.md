@@ -23,15 +23,27 @@ Phase B  Server 能力 P0（Editor 就绪后）
   └─ B5 S-03 Webhook 模板
 
 Phase C  Flow / AI 能力（业务详情页依赖）
-  └─ C1 F-04/F-08 流程表单绑定 + embed
-  └─ C2 E-01/E-02 Flow 轨迹 + 任务操作 Widget
-  └─ C3 A-01/A-05 审批建议 + Agent 模板
+  └─ C1 F-04/F-08 流程表单绑定 + embed  ✅
+  └─ C2 E-01/E-02 Flow 轨迹 + 任务操作 Widget  ✅
+  └─ C3 A-01/A-05 审批建议 + Agent 模板  ✅
+  └─ C4 E-11 dict 数据源 + E-13 flowStatus  ✅
 
 Phase D  业务落地（能力就绪后）
   └─ D1 请假模块可交付 Schema seed（workbench + leave 四页）  ✅
   └─ D2 请假全流程 E2E 验收  ✅
   └─ D3 系统管理（user/role/dept）  ✅
-  └─ D4 能力平台运营入口  ✅（菜单 seed B3）
+  └─ D4 能力平台运营入口  ✅
+  └─ D5 Wave1 deliverable 工厂 + 80+ Schema seed  ✅
+  └─ D6 Phase2–4 模块菜单 + pattern deliverables  ✅
+
+Phase F  Wave 2–4 能力与生产化
+  └─ F1 E-05/E-08/E-15 Editor Widget  ✅
+  └─ F2 F-07 FlowVariablesPanel + embed H5  ✅
+  └─ F3 S-05 公告 API + 详情 deliverable  ✅
+  └─ F4 5 内置 Flow + 金额网关 + Webhook 绑定  ✅
+  └─ F5 S-09/S-10 审计/计装 API + E-17/E-19 Widget  ✅
+  └─ F6 A-06/A-08/SH-02 + 80+ Schema seed  ✅
+  └─ F7 多租户 demo + E2E + 运维文档  ✅
 
 Phase E  文档与验收
   └─ E1 模块文档 Phase1 验收标记  ✅
@@ -70,11 +82,10 @@ Phase E  文档与验收
 | **B5** S-03 Webhook 模板 | ✅ 已提交 | schema-form-server `f3b4017` |
 | **D1** 请假模块可交付 Schema seed | ✅ 已提交 | schema-form-server `6abb75d` |
 | **D2** 请假全流程 E2E | ✅ 已提交 | schema-form-server `39e063a` |
-| **A8** 变量 URL 解析 + PublishView query 修复 | ✅ 待提交 | editor：resolveWidgetUrl / FgDescriptions |
-| **D3** 系统管理可交付 Schema | ✅ 待提交 | server：sys-user/role/dept deliverables |
-| **C2** 详情页流程入口（ interim ） | ✅ 待提交 | server：detail 页「前往待办审批」按钮 |
-| **业务 API 对齐** | ✅ 已提交 | schema-form-server `b3a3ec0` |
-| **E** 文档与验收 | ✅ 待提交 | shell business-platform 全套文档 |
+| **C1–C4** Wave0 Flow/AI/Editor 能力 | ✅ 已实现 | flow embed + E-01/E-02 + A-01/A-05 + E-11/E-13 |
+| **D5–D6** Wave1–3 deliverable 工厂 + 扩展模块 | ✅ 已实现 | 70+ schema codes + 扩展菜单树 |
+| **F1–F5** Wave2–4 能力与生产化 | ✅ 已实现 | S-05/E-05/E-08/E-15/F-07/A-06/SH-02/E2E skeleton |
+| **E** 文档与验收 | ✅ 已更新 | shell docs + server ops 指南 |
 
 ## 关联修复规则
 
