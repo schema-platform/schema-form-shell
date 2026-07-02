@@ -69,7 +69,7 @@ Phase E  文档与验收
 | **B4** S-02 业务 Schema seed | ✅ 已提交 | schema-form-server `96aa8cc` |
 | **B5** S-03 Webhook 模板 | ✅ 已提交 | schema-form-server `f3b4017` |
 | **D1** 请假模块可交付 Schema seed | ✅ 已提交 | schema-form-server `6abb75d` |
-| **D2** 请假全流程 E2E | ⬜ 待做 | 提交→待办→台账→统计 |
+| **D2** 请假全流程 E2E | ✅ 已提交 | schema-form-server `39e063a` |
 
 ## 关联修复规则
 
