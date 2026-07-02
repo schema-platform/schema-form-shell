@@ -17,6 +17,8 @@
 | [07-可交付 UI 规范（Board→Widget→Flow）](./07-deliverable-ui-board-widget-flow.md) | **画布排布、Widget 组合、Flow 集成、交付 Checklist** |
 | [08-高级表格列能力规范](./08-advanced-table-column-spec.md) | **Tooltip / Tag / 按钮 / 筛选** 能力与扩展 |
 | [09-Widget Mock 数据规范](./09-widget-mock-spec.md) | **复杂部件 mock.ts** 约定、设计器预览 vs 运行时 |
+| [10-执行计划](./10-execution-plan.md) | 分块路线图与进度 |
+| [Server API 映射](../../../schema-form-server/docs/business-api-mapping.md) | **业务模块 ↔ 接口服务** 对齐表 |
 
 ### 模块落地文档
 
