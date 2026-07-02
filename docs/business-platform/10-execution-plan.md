@@ -28,8 +28,8 @@ Phase C  Flow / AI 能力（业务详情页依赖）
   └─ C3 A-01/A-05 审批建议 + Agent 模板
 
 Phase D  业务落地（能力就绪后）
-  └─ D1 工作台 Schema
-  └─ D2 请假四页（apply/list/detail/stats）
+  └─ D1 请假模块可交付 Schema seed（workbench + leave 四页）  ✅
+  └─ D2 请假全流程 E2E 验收
   └─ D3 系统管理（user/role/dept）
   └─ D4 能力平台运营入口
 
@@ -51,7 +51,7 @@ Phase E  文档与验收
 | **A6** | editor | E-27 filterable + filters 编辑器 | AdvancedColumnsEditor / FgAdvancedTable | 列配置 + 运行时筛选 |
 | **B1** | server | S-08 `/designer` 菜单 | seedMenus / shell SideMenu | 菜单可打开 Flow 设计器 |
 | **B2–B5** | server | seed 菜单/Schema/Webhook + dashboard API | 04-menu / 00-workbench / 07-deliverable | admin 登录可见 P0 菜单；`/api/dashboard` KPI |
-| **D2** | server+editor | 请假全流程 | A2+B5+F-04 | 提交→待办→台账 |
+| **D2** | server+editor | 请假全流程 E2E | A2+B5+D1+F-04 | 提交→待办→台账 |
 
 ## 当前进度
 
@@ -68,6 +68,8 @@ Phase E  文档与验收
 | **B3** S-01 菜单 seed | ✅ 已提交 | schema-form-server `8817461` |
 | **B4** S-02 业务 Schema seed | ✅ 已提交 | schema-form-server `96aa8cc` |
 | **B5** S-03 Webhook 模板 | ✅ 已提交 | schema-form-server `f3b4017` |
+| **D1** 请假模块可交付 Schema seed | ✅ 已提交 | schema-form-server `6abb75d` |
+| **D2** 请假全流程 E2E | ⬜ 待做 | 提交→待办→台账→统计 |
 
 ## 关联修复规则
 
