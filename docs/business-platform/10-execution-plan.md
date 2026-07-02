@@ -55,11 +55,15 @@ Phase E  文档与验收
 
 ## 当前进度
 
-| 块 | 状态 | Commit |
-|----|------|--------|
-| A0 Widget Mock | 进行中 | schema-form-editor |
-| A1 E-26 | 待开始 | — |
-| A2+ | 待开始 | — |
+| **A0** Widget Mock | ✅ 已提交 | schema-form-editor `2143c6b` |
+| **A1** E-26 linkages | ✅ 已提交 | schema-form-editor `87c0865` |
+| **A2** E-04 submitSubmission | ✅ 已提交 | schema-form-editor `c7693d0` |
+| **A3** E-24 PublishView 变量 | ✅ 已提交 | 同上 |
+| **A4** E-25 absolute 表单 submit | ✅ 已提交 | schema-form-editor `70d67d8` |
+| **A5** E-03 嵌套 prop | ✅ 已提交 | schema-form-editor `54926ad` |
+| **A6** E-27 filterable | ✅ 已提交 | schema-form-editor `0a5f12c` |
+| **A7** E-28/E-29 dict + row 表达式 | ✅ 已提交 | schema-form-editor `5cf7157` |
+| **B1** S-08 Flow 菜单 | 进行中 | server seedMenus 路径修复 |
 
 ## 关联修复规则
 
