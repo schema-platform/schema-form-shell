@@ -29,13 +29,13 @@ Phase C  Flow / AI 能力（业务详情页依赖）
 
 Phase D  业务落地（能力就绪后）
   └─ D1 请假模块可交付 Schema seed（workbench + leave 四页）  ✅
-  └─ D2 请假全流程 E2E 验收
-  └─ D3 系统管理（user/role/dept）
-  └─ D4 能力平台运营入口
+  └─ D2 请假全流程 E2E 验收  ✅
+  └─ D3 系统管理（user/role/dept）  ✅
+  └─ D4 能力平台运营入口  ✅（菜单 seed B3）
 
 Phase E  文档与验收
-  └─ E1 模块文档 Phase1 验收标记
-  └─ E2 shell routing / README 对齐
+  └─ E1 模块文档 Phase1 验收标记  ✅
+  └─ E2 shell routing / README 对齐  ✅
 ```
 
 ## 分块明细
@@ -70,6 +70,11 @@ Phase E  文档与验收
 | **B5** S-03 Webhook 模板 | ✅ 已提交 | schema-form-server `f3b4017` |
 | **D1** 请假模块可交付 Schema seed | ✅ 已提交 | schema-form-server `6abb75d` |
 | **D2** 请假全流程 E2E | ✅ 已提交 | schema-form-server `39e063a` |
+| **A8** 变量 URL 解析 + PublishView query 修复 | ✅ 待提交 | editor：resolveWidgetUrl / FgDescriptions |
+| **D3** 系统管理可交付 Schema | ✅ 待提交 | server：sys-user/role/dept deliverables |
+| **C2** 详情页流程入口（ interim ） | ✅ 待提交 | server：detail 页「前往待办审批」按钮 |
+| **业务 API 对齐** | ✅ 已提交 | schema-form-server `b3a3ec0` |
+| **E** 文档与验收 | ✅ 待提交 | shell business-platform 全套文档 |
 
 ## 关联修复规则
 

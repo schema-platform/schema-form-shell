@@ -128,7 +128,7 @@ defineExpose({ resetMenu: () => {} })
     <div :class="$style.sidebarHeader">
       <router-link to="/" :class="$style.logoArea">
         <div :class="$style.logoIcon">S</div>
-        <span v-show="!collapsed" :class="$style.logoText">表单设计器</span>
+        <span v-show="!collapsed" :class="$style.logoText">Schema 业务平台</span>
       </router-link>
     </div>
 
