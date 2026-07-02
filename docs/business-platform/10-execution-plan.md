@@ -50,7 +50,7 @@ Phase E  文档与验收
 | **A5** | editor | E-03 列路径 `data.xxx` | FgAdvancedTable / submission 列表 API | advanced-table 单测 |
 | **A6** | editor | E-27 filterable + filters 编辑器 | AdvancedColumnsEditor / FgAdvancedTable | 列配置 + 运行时筛选 |
 | **B1** | server | S-08 `/designer` 菜单 | seedMenus / shell SideMenu | 菜单可打开 Flow 设计器 |
-| **B3–B5** | server | seed 菜单/Schema/Webhook | 04-menu / 07-deliverable | admin 登录可见 P0 菜单 |
+| **B2–B5** | server | seed 菜单/Schema/Webhook + dashboard API | 04-menu / 00-workbench / 07-deliverable | admin 登录可见 P0 菜单；`/api/dashboard` KPI |
 | **D2** | server+editor | 请假全流程 | A2+B5+F-04 | 提交→待办→台账 |
 
 ## 当前进度
@@ -64,6 +64,10 @@ Phase E  文档与验收
 | **A6** E-27 filterable | ✅ 已提交 | schema-form-editor `0a5f12c` |
 | **A7** E-28/E-29 dict + row 表达式 | ✅ 已提交 | schema-form-editor `5cf7157` |
 | **B1** S-08 Flow 菜单 | ✅ 已提交 | schema-form-server `65e1509` |
+| **B2** S-07 仪表盘 API | ✅ 已提交 | schema-form-server `b878d8c` |
+| **B3** S-01 菜单 seed | ✅ 已提交 | schema-form-server `8817461` |
+| **B4** S-02 业务 Schema seed | ✅ 已提交 | schema-form-server `96aa8cc` |
+| **B5** S-03 Webhook 模板 | ✅ 已提交 | schema-form-server `f3b4017` |
 
 ## 关联修复规则
 
