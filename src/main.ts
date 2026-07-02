@@ -25,6 +25,7 @@ import { setRouter } from '@/composables/useSubAppProps'
 import { setupElementPlus } from '@schema-platform/platform-shared/config/element'
 import { fetchCurrentUser } from '@/api/authApi'
 import { setUnauthorizedHandler } from '@schema-platform/platform-shared/utils/apiClient'
+import { isAuthLoginPath } from '@schema-platform/platform-shared/utils/authPaths'
 import { cancelAutoRefresh } from '@/composables/useAuth'
 
 import App from './App.vue'
@@ -43,6 +44,11 @@ const initialState = { token: localStorage.getItem('sfp_access_token') || '' }
 const actions = initGlobalState(initialState)
 
 const authStore = useAuthStore()
+
+if (isAuthLoginPath() && authStore.accessToken && !authStore.user) {
+  authStore.reset()
+}
+
 authStore.$subscribe((_mutation, state) => {
   actions.setGlobalState({ token: state.accessToken || '' })
 })
@@ -82,11 +88,16 @@ setGlobalStateActions({
 
 const microAppStore = useMicroAppStore()
 
-// 并行：恢复会话 + 拉取服务端配置
-// 拉取完成后注册到 qiankun，start() 由 ClassicSidebarLayout 在 #micro-container 就绪后调用
-Promise.all([
-  restoreSession(),
-  microAppStore.fetchApps().then(() => microAppStore.registerApps()).catch((err: unknown) => {
-    console.error('[shell] Failed to fetch micro-app configs:', err)
-  }),
-])
+// 登录页不做会话恢复 / micro-apps 拉取，避免 401 触发整页重载
+router.isReady().then(() => {
+  if (isAuthLoginPath()) return
+
+  Promise.all([
+    restoreSession(),
+    authStore.accessToken
+      ? microAppStore.fetchApps().then(() => microAppStore.registerApps()).catch((err: unknown) => {
+          console.error('[shell] Failed to fetch micro-app configs:', err)
+        })
+      : Promise.resolve(),
+  ])
+})

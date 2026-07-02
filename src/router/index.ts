@@ -90,7 +90,17 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  if (to.path === '/login') { next({ path: '/' }); return }
+  if (to.path === '/login') {
+    if (authStore.accessToken && authStore.user) {
+      next({ path: '/' })
+    } else {
+      if (authStore.accessToken && !authStore.user) {
+        authStore.reset()
+      }
+      next()
+    }
+    return
+  }
 
   next()
 })

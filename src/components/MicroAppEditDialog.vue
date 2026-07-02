@@ -10,7 +10,9 @@ import type { FormRules } from 'element-plus'
 import { createMicroApp, updateMicroApp, type MicroAppConfig, type MicroAppFormData } from '@/api/microAppApi'
 import FormDialog from '@schema-platform/platform-shared/components/common/FormDialog.vue'
 import AppIcon from '@schema-platform/platform-shared/components/common/AppIcon.vue'
-import { APP_ICON_NAMES } from '@schema-platform/platform-shared/utils/iconRegistry'
+import { ICON_MAP } from '@schema-platform/platform-shared/utils/iconRegistry'
+
+const APP_ICON_NAMES = Object.keys(ICON_MAP).sort()
 
 const props = defineProps<{
   visible: boolean
